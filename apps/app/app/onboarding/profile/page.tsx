@@ -1,10 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Logo, Wordmark } from "@/components/Brand";
 
 export default function ProfilePage() {
-  const [form, setForm] = useState({ firstName: "", lastName: "", bvn: "", nin: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", bvn: "", nin: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -12,7 +11,8 @@ export default function ProfilePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!form.firstName || !form.lastName) return setError("Name is required");
+    if (!form.firstName || !form.lastName) return setError("First and last name are required");
+    if (!form.email) return setError("Email is required");
     setLoading(true);
     try {
       const phone = sessionStorage.getItem("jb_phone") || "";
@@ -32,55 +32,55 @@ export default function ProfilePage() {
   }
 
   const fields = [
-    { key: "firstName", label: "First name", placeholder: "John" },
-    { key: "lastName", label: "Last name", placeholder: "Doe" },
-    { key: "bvn", label: "BVN (optional)", placeholder: "22•••••••••" },
-    { key: "nin", label: "NIN (optional)", placeholder: "1234••••56" },
-  ] as const;
+    { key: "firstName", label: "First name", placeholder: "John", type: "text", required: true },
+    { key: "lastName", label: "Last name", placeholder: "Doe", type: "text", required: true },
+    { key: "email", label: "Email address", placeholder: "john@example.com", type: "email", required: true },
+    { key: "bvn", label: "BVN (optional)", placeholder: "22*********", type: "text", required: false },
+    { key: "nin", label: "NIN (optional)", placeholder: "1234****56", type: "text", required: false },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 jmb-page-in">
+    <div className="min-h-screen bg-[#0052CC] flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center text-center mb-8">
-          <Logo size={56} />
-          <div className="mt-4"><Wordmark size="lg" /></div>
-          <p className="text-[var(--jmb-text-dim)] text-sm mt-2">Just a few details to set up your wallet.</p>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">JeezBank</h1>
+          <p className="text-blue-200">Complete your profile</p>
         </div>
 
-        <div className="relative">
-          <div className="absolute -inset-1 rounded-[28px] blur-2xl opacity-50 jmb-pulse" style={{ background: "var(--jmb-grad-card)" }} />
-          <div className="relative jmb-glass-hi jmb-glow rounded-[26px] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Tell us about you</h2>
-              <span className="jmb-chip">Step 3 of 3</span>
-            </div>
+        <div className="bg-white rounded-2xl p-6 shadow-xl">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Tell us about you</h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {fields.map(({ key, label, placeholder }) => (
-                <div key={key}>
-                  <label className="block text-[11px] uppercase tracking-[0.16em] text-[var(--jmb-text-mute)] mb-2">{label}</label>
-                  <input
-                    type="text"
-                    value={form[key]}
-                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                    placeholder={placeholder}
-                    className="jmb-input"
-                  />
-                </div>
-              ))}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {fields.map(({ key, label, placeholder, type, required }) => (
+              <div key={key}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {label} {required && <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type={type}
+                  value={form[key as keyof typeof form]}
+                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                  placeholder={placeholder}
+                  required={required}
+                  className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            ))}
 
-              {error && (
-                <div className="text-sm rounded-xl px-4 py-3"
-                     style={{ background: "rgba(255,92,122,0.08)", border: "1px solid rgba(255,92,122,0.25)", color: "var(--jmb-red)" }}>
-                  {error}
-                </div>
-              )}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
 
-              <button type="submit" disabled={loading} className="jmb-btn w-full">
-                {loading ? "Creating account..." : "Create my JMB account"}
-              </button>
-            </form>
-          </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#0052CC] text-white py-3 rounded-xl font-semibold text-sm hover:bg-blue-700 disabled:opacity-50 transition"
+            >
+              {loading ? "Creating account..." : "Create my account"}
+            </button>
+          </form>
         </div>
       </div>
     </div>
