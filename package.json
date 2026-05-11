@@ -1,0 +1,14 @@
+{
+  "name": "jeezbank",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:app": "npm run dev --workspace=apps/app",
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "build:app": "npm run build --workspace=apps/app",
+    "build:admin": "npm run build --workspace=apps/admin"
+  }
+}
