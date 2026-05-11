@@ -3,14 +3,17 @@ import { createCustomer, createAccount } from "@/lib/fusecore";
 import { signToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
-  const { phone, firstName, lastName, bvn, nin } = await req.json();
+  const { phone, firstName, lastName, email, bvn, nin } = await req.json();
   if (!phone || !firstName || !lastName) {
     return NextResponse.json({ error: "Name and phone required" }, { status: 400 });
+  }
+  if (!email) {
+    return NextResponse.json({ error: "Email is required" }, { status: 400 });
   }
 
   try {
     // 1. Create customer in FuseCore
-    const customer = await createCustomer({ firstName, lastName, phone, bvn, nin });
+    const customer = await createCustomer({ firstName, lastName, email, phone, bvn, nin });
     const customerId = customer.data?.id || customer.id;
 
     // 2. Create account in FuseCore
@@ -24,8 +27,8 @@ export async function POST(req: NextRequest) {
     const token = await signToken({
       userId: `user_${phone}`,
       phone,
-      customerId,
-      accountId,
+      customerId: String(customerId),
+      accountId: String(accountId),
       name: `${firstName} ${lastName}`,
       kycTier: bvn ? 1 : 0,
     });
@@ -40,6 +43,17 @@ export async function POST(req: NextRequest) {
     return res;
   } catch (err: unknown) {
     console.error("complete-profile error:", err);
-    return NextResponse.json({ error: "Failed to create account" }, { status: 500 });
+    // Surface the actual FuseCore error
+    let message = "Failed to create account";
+    if (err && typeof err === "object" && "response" in err) {
+      const axiosErr = err as { response?: { data?: { message?: string | string[] } } };
+      const data = axiosErr.response?.data;
+      if (data?.message) {
+        message = Array.isArray(data.message) ? data.message.join(", ") : data.message;
+      }
+    } else if (err instanceof Error) {
+      message = err.message;
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
