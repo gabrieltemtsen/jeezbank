@@ -1,13 +1,36 @@
 import axios from "axios";
 
+const BASE_URL = process.env.FUSECORE_BASE_URL;
+const API_KEY = process.env.FUSECORE_API_KEY;
+
+if (!BASE_URL) console.warn("[fusecore] FUSECORE_BASE_URL is not set");
+if (!API_KEY) console.warn("[fusecore] FUSECORE_API_KEY is not set");
+
 const fusecore = axios.create({
-  baseURL: process.env.FUSECORE_BASE_URL || "http://localhost:3000/api/v1",
+  baseURL: BASE_URL || "http://localhost:3000/api/v1",
   headers: {
-    "X-API-Key": process.env.FUSECORE_API_KEY || "",
+    "X-API-Key": API_KEY ?? "",
     "Content-Type": "application/json",
   },
-  timeout: 10000,
+  timeout: 15000,
 });
+
+// Log every outbound request in dev for debugging
+fusecore.interceptors.request.use((config) => {
+  console.log(`[fusecore] → ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+  console.log(`[fusecore]   X-API-Key: ${config.headers["X-API-Key"] ? "set ✓" : "MISSING ✗"}`);
+  return config;
+});
+
+fusecore.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const status = err.response?.status;
+    const body = err.response?.data;
+    console.error(`[fusecore] ✗ ${status}`, JSON.stringify(body));
+    return Promise.reject(err);
+  }
+);
 
 // ── Customers ──────────────────────────────────────────────
 export async function createCustomer(data: {
@@ -42,7 +65,10 @@ export async function getAccount(id: string) {
   return res.data;
 }
 
-export async function getAccountTransactions(id: string, params?: { limit?: number; offset?: number }) {
+export async function getAccountTransactions(
+  id: string,
+  params?: { limit?: number; offset?: number }
+) {
   const res = await fusecore.get(`/accounts/${id}/transactions`, { params });
   return res.data;
 }
@@ -52,7 +78,7 @@ export async function sendMoney(data: {
   fromAccountId: string;
   toAccountNumber: string;
   toBankCode: string;
-  amount: number; // in kobo
+  amount: number;
   narration: string;
   idempotencyKey: string;
 }) {
