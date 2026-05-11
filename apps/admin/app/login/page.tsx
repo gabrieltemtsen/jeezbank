@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Logo, Wordmark } from "@/components/Brand";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -29,43 +30,74 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center px-6 py-10 jmb-page-in">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-[#0052CC] rounded-2xl flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">JB</div>
-          <h1 className="text-2xl font-bold text-white">JeezBank Admin</h1>
-          <p className="text-gray-400 text-sm mt-1">Staff portal</p>
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="jmb-float"><Logo size={56} /></div>
+          <div className="mt-4 flex items-center gap-2">
+            <Wordmark size="lg" />
+            <span className="jmb-chip">Admin</span>
+          </div>
+          <p className="text-sm text-[var(--jmb-text-dim)] mt-2">JMB staff & operations portal</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="manager@jeezbank.com" className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+        <div className="relative">
+          <div className="absolute -inset-1 rounded-[28px] blur-2xl opacity-50 jmb-pulse" style={{ background: "var(--jmb-grad-card)" }} />
+          <div className="relative jmb-glass-hi jmb-glow rounded-[26px] p-6">
+            <h2 className="text-lg font-semibold text-white">Sign in</h2>
+            <p className="text-sm text-[var(--jmb-text-dim)] mt-1 mb-5">Authorized staff only.</p>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[11px] uppercase tracking-[0.16em] text-[var(--jmb-text-mute)] mb-2">Email</label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="manager@jeezbank.com"
+                  className="jmb-input"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] uppercase tracking-[0.16em] text-[var(--jmb-text-mute)] mb-2">Password</label>
+                <input
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  placeholder="••••••••"
+                  className="jmb-input"
+                  required
+                />
+              </div>
+
+              {error && (
+                <div className="text-sm rounded-xl px-4 py-3"
+                     style={{ background: "rgba(255,92,122,0.08)", border: "1px solid rgba(255,92,122,0.25)", color: "var(--jmb-red)" }}>
+                  {error}
+                </div>
+              )}
+
+              <button type="submit" disabled={loading} className="jmb-btn w-full">
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+            </form>
+
+            <div className="mt-5 jmb-glass rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jmb-text-mute)] mb-2">Demo credentials</p>
+              <div className="text-xs text-[var(--jmb-text-dim)] space-y-1 font-mono">
+                <p>manager@jeezbank.com · password123</p>
+                <p>officer@jeezbank.com · password123</p>
+                <p>cc@jeezbank.com · password123</p>
+              </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
-                placeholder="••••••••" className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-            </div>
-
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-
-            <button type="submit" disabled={loading}
-              className="w-full bg-[#0052CC] text-white py-3 rounded-xl font-semibold disabled:opacity-50">
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
-          </form>
-
-          <div className="mt-4 p-3 bg-gray-50 rounded-xl text-xs text-gray-500 space-y-1">
-            <p className="font-medium text-gray-600">Demo credentials:</p>
-            <p>manager@jeezbank.com / password123</p>
-            <p>officer@jeezbank.com / password123</p>
-            <p>cc@jeezbank.com / password123</p>
           </div>
         </div>
+
+        <p className="text-center text-[11px] text-[var(--jmb-text-mute)] mt-6">
+          Protected by JMB · Secured by FuseCore
+        </p>
       </div>
     </div>
   );

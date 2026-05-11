@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
 import { getTransactions } from "@/lib/fusecore";
-import Sidebar from "@/components/Sidebar";
+import Shell from "@/components/Shell";
+import PageHeader from "@/components/PageHeader";
 
 export default async function TransactionsPage() {
   const session = await getAdminSession();
@@ -13,50 +14,86 @@ export default async function TransactionsPage() {
     transactions = data.data || data || [];
   } catch {}
 
-  return (
-    <div className="flex min-h-screen">
-      <Sidebar role={session.role} name={session.name} />
-      <main className="flex-1 p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">Transaction Monitoring</h1>
+  const total = transactions.length;
+  const credits = transactions.filter((t) => t.type === "CREDIT").length;
+  const debits = transactions.filter((t) => t.type === "DEBIT").length;
+  const totalVolume = transactions.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
 
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+  return (
+    <Shell role={session.role} name={session.name}>
+      <PageHeader
+        title="Transaction Monitoring"
+        subtitle={`${total} recent transactions · live from FuseCore`}
+        actions={<button className="jmb-btn-ghost jmb-btn-sm">Export CSV</button>}
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <Kpi label="Volume (sample)" value={`₦${(totalVolume / 100).toLocaleString()}`} accent="var(--jmb-cyan)" />
+        <Kpi label="Credits" value={String(credits)} accent="var(--jmb-mint)" />
+        <Kpi label="Debits" value={String(debits)} accent="var(--jmb-pink)" />
+      </div>
+
+      <div className="jmb-glass rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="jmb-table">
+            <thead>
               <tr>
-                {["Reference", "Type", "Amount", "Status", "Narration", "Date"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>
-                ))}
+                <th>Reference</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Narration</th>
+                <th>Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {transactions.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-400">No transactions found</td></tr>
+                <tr><td colSpan={6} className="text-center text-[var(--jmb-text-mute)] py-12">No transactions found</td></tr>
               ) : (
-                transactions.map((tx, i) => (
-                  <tr key={i} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-xs font-mono text-gray-600">{String(tx.reference || "").slice(0, 16)}...</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${tx.type === "CREDIT" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                        {String(tx.type || "")}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                      ₦{((Number(tx.amount) || 0) / 100).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">{String(tx.status || "")}</span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{String(tx.narration || "—")}</td>
-                    <td className="px-4 py-3 text-xs text-gray-400">
-                      {tx.createdAt ? new Date(String(tx.createdAt)).toLocaleString() : "—"}
-                    </td>
-                  </tr>
-                ))
+                transactions.map((tx, i) => {
+                  const isCredit = tx.type === "CREDIT";
+                  const status = String(tx.status || "");
+                  const statusPill =
+                    status === "SUCCESS" || status === "COMPLETED" ? "jmb-pill-green" :
+                    status === "PENDING" ? "jmb-pill-amber" :
+                    status === "FAILED" || status === "REVERSED" ? "jmb-pill-red" : "jmb-pill-mute";
+                  return (
+                    <tr key={i}>
+                      <td className="font-mono text-xs text-[var(--jmb-text-dim)]">{String(tx.reference || "").slice(0, 16)}…</td>
+                      <td>
+                        <span className={`jmb-pill ${isCredit ? "jmb-pill-green" : "jmb-pill-red"}`}>
+                          <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                            {isCredit ? <><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></> : <><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></>}
+                          </svg>
+                          {String(tx.type || "")}
+                        </span>
+                      </td>
+                      <td className="font-semibold text-white">
+                        {isCredit ? "+" : "-"}₦{((Number(tx.amount) || 0) / 100).toLocaleString()}
+                      </td>
+                      <td><span className={`jmb-pill ${statusPill}`}>{status || "—"}</span></td>
+                      <td className="text-[var(--jmb-text-dim)] truncate max-w-[260px]">{String(tx.narration || "—")}</td>
+                      <td className="text-xs text-[var(--jmb-text-mute)]">{tx.createdAt ? new Date(String(tx.createdAt)).toLocaleString() : "—"}</td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
-      </main>
+      </div>
+    </Shell>
+  );
+}
+
+function Kpi({ label, value, accent }: { label: string; value: string; accent: string }) {
+  return (
+    <div className="jmb-glass rounded-2xl p-5">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--jmb-text-mute)]">{label}</p>
+      <p className="text-2xl font-bold text-white mt-2">{value}</p>
+      <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
+        <div className="h-full w-2/5" style={{ background: accent }} />
+      </div>
     </div>
   );
 }

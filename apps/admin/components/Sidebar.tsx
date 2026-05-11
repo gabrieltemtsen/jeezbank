@@ -1,60 +1,112 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Logo, Wordmark } from "@/components/Brand";
 
-const navItems = [
-  { label: "Dashboard", icon: "📊", href: "/dashboard", roles: ["MANAGER", "OFFICER", "CUSTOMER_CARE"] },
-  { label: "Customers", icon: "👥", href: "/customers", roles: ["MANAGER", "OFFICER", "CUSTOMER_CARE"] },
-  { label: "Transactions", icon: "💸", href: "/transactions", roles: ["MANAGER", "OFFICER", "CUSTOMER_CARE"] },
-  { label: "Loans", icon: "🏦", href: "/loans", roles: ["MANAGER", "OFFICER"] },
-  { label: "AML Alerts", icon: "🚨", href: "/aml", roles: ["MANAGER"] },
-  { label: "Reports", icon: "📋", href: "/reports", roles: ["MANAGER"] },
+type Nav = { label: string; href: string; roles: string[]; icon: React.ReactNode };
+
+const I = (path: React.ReactNode) => (
+  <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    {path}
+  </svg>
+);
+
+const navItems: Nav[] = [
+  {
+    label: "Dashboard", href: "/dashboard", roles: ["MANAGER", "OFFICER", "CUSTOMER_CARE"],
+    icon: I(<><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></>),
+  },
+  {
+    label: "Customers", href: "/customers", roles: ["MANAGER", "OFFICER", "CUSTOMER_CARE"],
+    icon: I(<><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.5-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M19 20c-.4-2.4-1.6-3.7-3.5-4.4"/></>),
+  },
+  {
+    label: "Transactions", href: "/transactions", roles: ["MANAGER", "OFFICER", "CUSTOMER_CARE"],
+    icon: I(<><path d="M4 7h13"/><path d="M14 4l3 3-3 3"/><path d="M20 17H7"/><path d="M10 20l-3-3 3-3"/></>),
+  },
+  {
+    label: "Loans", href: "/loans", roles: ["MANAGER", "OFFICER"],
+    icon: I(<><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M10 21v-6h4v6"/></>),
+  },
+  {
+    label: "AML Alerts", href: "/aml", roles: ["MANAGER"],
+    icon: I(<><path d="M12 2 1 21h22L12 2z"/><path d="M12 9v5"/><path d="M12 17h.01"/></>),
+  },
+  {
+    label: "Reports", href: "/reports", roles: ["MANAGER"],
+    icon: I(<><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></>),
+  },
 ];
 
 export default function Sidebar({ role, name }: { role: string; name: string }) {
   const pathname = usePathname();
   const filtered = navItems.filter((n) => n.roles.includes(role));
+  const roleLabel = role.replace("_", " ").toLowerCase();
 
   return (
-    <aside className="w-64 bg-gray-900 min-h-screen flex flex-col">
-      <div className="p-6 border-b border-gray-800">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#0052CC] rounded-xl flex items-center justify-center text-white font-bold">JB</div>
-          <div>
-            <p className="text-white font-semibold text-sm">JeezBank</p>
-            <p className="text-gray-400 text-xs">Admin Portal</p>
+    <aside className="w-64 shrink-0 sticky top-0 self-start h-screen flex flex-col">
+      {/* glass surface */}
+      <div className="m-3 mr-0 flex-1 jmb-glass rounded-3xl flex flex-col overflow-hidden">
+        <div className="px-5 pt-5 pb-4 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <Logo size={38} />
+            <div className="min-w-0">
+              <Wordmark size="md" />
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jmb-text-mute)] mt-0.5">JMB · Admin</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <nav className="flex-1 p-4 space-y-1">
-        {filtered.map((item) => {
-          const active = pathname.startsWith(item.href);
-          return (
-            <Link key={item.href} href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition ${
-                active ? "bg-[#0052CC] text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"
-              }`}>
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          <p className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-[0.2em] text-[var(--jmb-text-mute)]">Workspace</p>
+          {filtered.map((item) => {
+            const active = pathname === item.href || pathname?.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition ${
+                  active ? "text-white" : "text-[var(--jmb-text-dim)] hover:text-white hover:bg-white/5"
+                }`}
+              >
+                {active && (
+                  <>
+                    <span className="absolute inset-0 rounded-xl jmb-glass-hi" />
+                    <span className="absolute left-1.5 top-2 bottom-2 w-0.5 rounded-full"
+                          style={{ background: "var(--jmb-grad-primary)" }} />
+                  </>
+                )}
+                <span className={`relative ${active ? "text-white" : "text-[var(--jmb-text-dim)] group-hover:text-white"}`}>
+                  {item.icon}
+                </span>
+                <span className="relative font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
-      <div className="p-4 border-t border-gray-800">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-xs font-bold">
-            {name[0]?.toUpperCase()}
-          </div>
-          <div>
-            <p className="text-white text-xs font-medium">{name}</p>
-            <p className="text-gray-500 text-xs">{role.replace("_", " ")}</p>
+        <div className="p-3 border-t border-white/5">
+          <div className="jmb-glass-hi rounded-2xl p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[#06121a] font-bold"
+                 style={{ background: "var(--jmb-grad-primary)" }}>
+              {name[0]?.toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-white truncate">{name}</p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--jmb-text-mute)]">{roleLabel}</p>
+            </div>
+            <form action="/api/auth/logout" method="POST">
+              <button title="Sign out"
+                      className="w-8 h-8 rounded-lg jmb-glass hover:bg-white/10 transition flex items-center justify-center text-[var(--jmb-text-dim)] hover:text-[var(--jmb-red)]">
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <path d="M16 17l5-5-5-5"/>
+                  <path d="M21 12H9"/>
+                </svg>
+              </button>
+            </form>
           </div>
         </div>
-        <form action="/api/auth/logout" method="POST">
-          <button className="w-full text-gray-400 text-xs hover:text-red-400 transition text-left">Sign out →</button>
-        </form>
       </div>
     </aside>
   );
