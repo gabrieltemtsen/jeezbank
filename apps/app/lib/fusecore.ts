@@ -13,6 +13,7 @@ const fusecore = axios.create({
 export async function createCustomer(data: {
   firstName: string;
   lastName: string;
+  email: string;
   phone: string;
   bvn?: string;
   nin?: string;
