@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getAccountTransactions } from "@/lib/fusecore";
-import Link from "next/link";
+import { BackBtn, Wordmark } from "@/components/Brand";
+import BottomNav from "@/components/BottomNav";
 
 export default async function TransactionsPage() {
   const session = await getSession();
@@ -15,45 +16,90 @@ export default async function TransactionsPage() {
     } catch {}
   }
 
+  // Group by day
+  const groups: Record<string, Record<string, unknown>[]> = {};
+  for (const tx of transactions) {
+    const d = tx.createdAt ? new Date(String(tx.createdAt)) : new Date();
+    const key = d.toDateString();
+    (groups[key] = groups[key] || []).push(tx);
+  }
+  const groupKeys = Object.keys(groups);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-[#0052CC] px-6 pt-12 pb-6">
-        <Link href="/home" className="text-white mb-4 flex items-center gap-2">← Back</Link>
-        <h1 className="text-white text-2xl font-bold">Transaction History</h1>
+    <div className="min-h-screen pb-28 jmb-page-in">
+      <div className="mx-auto max-w-md px-5 pt-10">
+        <header className="flex items-center justify-between mb-6">
+          <BackBtn href="/home" />
+          <Wordmark size="sm" />
+          <div className="w-10" />
+        </header>
+
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-white tracking-tight">Activity</h1>
+          <p className="text-sm text-[var(--jmb-text-dim)] mt-1">All your JMB transactions, in one place.</p>
+        </div>
+
+        {transactions.length === 0 ? (
+          <div className="jmb-glass rounded-3xl p-12 text-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center jmb-glass-hi mb-4">
+              <svg viewBox="0 0 24 24" className="w-6 h-6 text-[var(--jmb-text-dim)]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 12h4l2-5 4 10 2-5h6"/>
+              </svg>
+            </div>
+            <p className="text-white font-medium">No activity yet</p>
+            <p className="text-xs text-[var(--jmb-text-mute)] mt-1">Your transactions will appear here.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {groupKeys.map((day) => {
+              const txs = groups[day];
+              const dayDate = new Date(day);
+              const today = new Date();
+              const isToday = dayDate.toDateString() === today.toDateString();
+              const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+              const isYesterday = dayDate.toDateString() === yesterday.toDateString();
+              const label = isToday ? "Today" : isYesterday ? "Yesterday" : dayDate.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
+
+              return (
+                <div key={day}>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jmb-text-mute)] mb-2 px-1">{label}</p>
+                  <div className="jmb-glass rounded-2xl divide-y divide-white/5 overflow-hidden">
+                    {txs.map((tx, i) => {
+                      const isCredit = tx.type === "CREDIT";
+                      return (
+                        <div key={i} className="flex items-center justify-between p-4">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${isCredit ? "bg-[rgba(44,214,160,0.12)] text-[var(--jmb-green)]" : "bg-[rgba(255,92,122,0.12)] text-[var(--jmb-red)]"}`}>
+                              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                {isCredit ? <><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></> : <><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></>}
+                              </svg>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-white truncate">{String(tx.narration || "Transaction")}</p>
+                              <p className="text-[11px] text-[var(--jmb-text-mute)] truncate">
+                                {tx.reference ? `Ref ${String(tx.reference).slice(0, 10)}…` : ""}
+                                {tx.createdAt ? ` · ${new Date(String(tx.createdAt)).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0 pl-3">
+                            <p className={`text-sm font-semibold ${isCredit ? "text-[var(--jmb-green)]" : "text-white"}`}>
+                              {isCredit ? "+" : "-"}₦{((Number(tx.amount) || 0) / 100).toLocaleString()}
+                            </p>
+                            <p className="text-[10px] uppercase tracking-wider text-[var(--jmb-text-mute)] mt-0.5">{String(tx.status || "")}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      <div className="px-6 mt-6">
-        <div className="bg-white rounded-2xl shadow-sm divide-y">
-          {transactions.length === 0 ? (
-            <div className="p-12 text-center text-gray-400">
-              <p className="text-4xl mb-3">📋</p>
-              <p>No transactions yet</p>
-            </div>
-          ) : (
-            transactions.map((tx, i) => (
-              <div key={i} className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
-                    ${tx.type === "CREDIT" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
-                    {tx.type === "CREDIT" ? "↙" : "↗"}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">{String(tx.narration || "Transaction")}</p>
-                    <p className="text-xs text-gray-400">{tx.reference ? `Ref: ${String(tx.reference).slice(0, 12)}...` : ""}</p>
-                    <p className="text-xs text-gray-400">{tx.createdAt ? new Date(String(tx.createdAt)).toLocaleString() : ""}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className={`text-sm font-semibold block ${tx.type === "CREDIT" ? "text-green-600" : "text-red-600"}`}>
-                    {tx.type === "CREDIT" ? "+" : "-"}₦{((Number(tx.amount) || 0) / 100).toLocaleString()}
-                  </span>
-                  <span className="text-xs text-gray-400">{String(tx.status || "")}</span>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
+      <BottomNav />
     </div>
   );
 }

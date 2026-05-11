@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Logo, Wordmark, BackBtn } from "@/components/Brand";
 
 export default function VerifyPage() {
   const [otp, setOtp] = useState("");
@@ -38,43 +39,54 @@ export default function VerifyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0052CC] flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 jmb-page-in">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-white mb-2">JeezBank</h1>
+        <div className="flex flex-col items-center text-center mb-8">
+          <Logo size={56} />
+          <div className="mt-4"><Wordmark size="lg" /></div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-xl">
-          <button onClick={() => router.back()} className="text-gray-400 text-sm mb-4">← Back</button>
-          <h2 className="text-xl font-semibold text-gray-800 mb-1">Verify your number</h2>
-          <p className="text-gray-500 text-sm mb-6">
-            Enter the 6-digit code sent to <span className="font-medium text-gray-700">+234{phone?.slice(-10)}</span>
-          </p>
+        <div className="relative">
+          <div className="absolute -inset-1 rounded-[28px] blur-2xl opacity-50 jmb-pulse" style={{ background: "var(--jmb-grad-card)" }} />
+          <div className="relative jmb-glass-hi jmb-glow rounded-[26px] p-6">
+            <div className="flex items-center justify-between mb-4">
+              <BackBtn onClick={() => router.back()} />
+              <span className="jmb-chip">Step 2 of 3</span>
+            </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="number"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.slice(0, 6))}
-              placeholder="000000"
-              className="w-full border border-gray-300 rounded-xl px-4 py-4 text-center text-2xl font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-
-            <p className="text-xs text-gray-400 text-center">
-              💡 Dev mode: use any 6-digit code (e.g. 123456)
+            <h2 className="text-lg font-semibold text-white">Verify your number</h2>
+            <p className="text-[var(--jmb-text-dim)] text-sm mt-1 mb-5">
+              Enter the 6-digit code we sent to <span className="text-white font-medium">+234{phone?.slice(-10)}</span>
             </p>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#0052CC] text-white py-3 rounded-xl font-semibold text-sm hover:bg-blue-700 disabled:opacity-50 transition"
-            >
-              {loading ? "Verifying..." : "Verify"}
-            </button>
-          </form>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="\d*"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="• • • • • •"
+                className="jmb-input text-center text-2xl font-bold tracking-[0.55em] py-5"
+                required
+              />
+
+              {error && (
+                <div className="text-sm rounded-xl px-4 py-3"
+                     style={{ background: "rgba(255,92,122,0.08)", border: "1px solid rgba(255,92,122,0.25)", color: "var(--jmb-red)" }}>
+                  {error}
+                </div>
+              )}
+
+              <p className="text-[11px] text-[var(--jmb-text-mute)] text-center">
+                Dev mode: any 6-digit code works (e.g. 123456)
+              </p>
+
+              <button type="submit" disabled={loading} className="jmb-btn w-full">
+                {loading ? "Verifying..." : "Verify"}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>

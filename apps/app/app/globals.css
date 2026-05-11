@@ -1,26 +1,202 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* JeezBank — Midnight Aurora theme */
+  --jmb-bg-0: #07070d;
+  --jmb-bg-1: #0d0d18;
+  --jmb-bg-2: #14142a;
+  --jmb-surface: rgba(255, 255, 255, 0.04);
+  --jmb-surface-hi: rgba(255, 255, 255, 0.08);
+  --jmb-border: rgba(255, 255, 255, 0.08);
+  --jmb-border-hi: rgba(255, 255, 255, 0.14);
+
+  --jmb-text: #f5f7fb;
+  --jmb-text-dim: #a5acc4;
+  --jmb-text-mute: #6b7390;
+
+  --jmb-mint: #00f5a0;
+  --jmb-cyan: #00d9f5;
+  --jmb-violet: #8a5cff;
+  --jmb-pink: #ff5cb0;
+  --jmb-amber: #ffb547;
+  --jmb-red: #ff5c7a;
+  --jmb-green: #2cd6a0;
+
+  --jmb-grad-primary: linear-gradient(135deg, #00f5a0 0%, #00d9f5 50%, #8a5cff 100%);
+  --jmb-grad-card: linear-gradient(135deg, rgba(0,245,160,0.18) 0%, rgba(0,217,245,0.14) 45%, rgba(138,92,255,0.22) 100%);
+  --jmb-grad-bg: radial-gradient(1200px 600px at 10% -10%, rgba(138,92,255,0.18), transparent 60%),
+                 radial-gradient(900px 500px at 110% 10%, rgba(0,217,245,0.15), transparent 55%),
+                 radial-gradient(800px 600px at 50% 110%, rgba(0,245,160,0.12), transparent 60%),
+                 linear-gradient(180deg, #07070d 0%, #0a0a16 100%);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--jmb-bg-0);
+  --color-foreground: var(--jmb-text);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  background: var(--jmb-bg-0);
+  color: var(--jmb-text);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image: var(--jmb-grad-bg);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Aurora gradient text */
+.jmb-grad-text {
+  background: var(--jmb-grad-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Glass card */
+.jmb-glass {
+  background: var(--jmb-surface);
+  border: 1px solid var(--jmb-border);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.jmb-glass-hi {
+  background: var(--jmb-surface-hi);
+  border: 1px solid var(--jmb-border-hi);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+}
+
+/* Glow ring used on hero card */
+.jmb-glow {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06) inset,
+    0 30px 80px -20px rgba(138,92,255,0.45),
+    0 20px 60px -30px rgba(0,217,245,0.45);
+}
+
+/* Primary gradient button */
+.jmb-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border-radius: 1rem;
+  padding: 0.875rem 1.25rem;
+  color: #06121a;
+  background: var(--jmb-grad-primary);
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  transition: background-position 600ms ease, transform 150ms ease, box-shadow 200ms ease;
+  box-shadow:
+    0 10px 30px -10px rgba(0, 217, 245, 0.55),
+    0 6px 20px -8px rgba(138, 92, 255, 0.55);
+}
+.jmb-btn:hover { background-position: 100% 50%; }
+.jmb-btn:active { transform: translateY(1px) scale(0.99); }
+.jmb-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.jmb-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  border-radius: 1rem;
+  padding: 0.875rem 1.25rem;
+  color: var(--jmb-text);
+  background: var(--jmb-surface);
+  border: 1px solid var(--jmb-border-hi);
+  transition: background 200ms ease, transform 150ms ease;
+}
+.jmb-btn-ghost:hover { background: var(--jmb-surface-hi); }
+.jmb-btn-ghost:active { transform: translateY(1px) scale(0.99); }
+
+/* Inputs */
+.jmb-input {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--jmb-border);
+  color: var(--jmb-text);
+  border-radius: 0.875rem;
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+}
+.jmb-input::placeholder { color: var(--jmb-text-mute); }
+.jmb-input:focus {
+  outline: none;
+  border-color: rgba(0,217,245,0.55);
+  background: rgba(255,255,255,0.05);
+  box-shadow: 0 0 0 4px rgba(0,217,245,0.12);
+}
+
+/* Pill / chip */
+.jmb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--jmb-surface);
+  border: 1px solid var(--jmb-border);
+  color: var(--jmb-text-dim);
+  border-radius: 9999px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+/* Aurora pulse animation for hero accents */
+@keyframes jmb-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+.jmb-pulse { animation: jmb-pulse 4.5s ease-in-out infinite; }
+
+@keyframes jmb-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.jmb-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: jmb-shimmer 2.2s linear infinite;
+}
+
+@keyframes jmb-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.jmb-float { animation: jmb-float 5s ease-in-out infinite; }
+
+/* Bottom nav safe area */
+.jmb-nav-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 1rem); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+/* Selection */
+::selection { background: rgba(0, 245, 160, 0.35); color: #fff; }
+
+/* Page transitions */
+.jmb-page-in {
+  animation: jmb-fade-up 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes jmb-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }

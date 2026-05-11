@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Logo, Wordmark } from "@/components/Brand";
 
 export default function OnboardingPage() {
   const [phone, setPhone] = useState("");
@@ -32,49 +33,62 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0052CC] flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 jmb-page-in">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-white mb-2">JeezBank</h1>
-          <p className="text-blue-200">Banking made simple</p>
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="jmb-float">
+            <Logo size={64} />
+          </div>
+          <div className="mt-5">
+            <Wordmark size="xl" />
+          </div>
+          <p className="text-[var(--jmb-text-dim)] text-sm mt-2">Banking, reimagined for the next generation.</p>
+          <span className="jmb-chip mt-4">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--jmb-mint)" }} />
+            JMB · Built on FuseCore
+          </span>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-xl">
-          <h2 className="text-xl font-semibold text-gray-800 mb-1">Get started</h2>
-          <p className="text-gray-500 text-sm mb-6">Enter your phone number to continue</p>
+        <div className="relative">
+          <div className="absolute -inset-1 rounded-[28px] blur-2xl opacity-50 jmb-pulse" style={{ background: "var(--jmb-grad-card)" }} />
+          <div className="relative jmb-glass-hi jmb-glow rounded-[26px] p-6">
+            <h2 className="text-lg font-semibold text-white">Get started</h2>
+            <p className="text-[var(--jmb-text-dim)] text-sm mt-1 mb-5">Enter your phone number to continue.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
-              <div className="flex">
-                <span className="inline-flex items-center px-3 border border-r-0 border-gray-300 rounded-l-lg bg-gray-50 text-gray-500 text-sm">
-                  +234
-                </span>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="08012345678"
-                  className="flex-1 border border-gray-300 rounded-r-lg px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[11px] uppercase tracking-[0.16em] text-[var(--jmb-text-mute)] mb-2">Phone number</label>
+                <div className="flex rounded-2xl overflow-hidden border border-white/10 focus-within:border-[rgba(0,217,245,0.55)] transition">
+                  <span className="inline-flex items-center px-3 bg-white/[0.04] text-[var(--jmb-text-dim)] text-sm border-r border-white/10">
+                    🇳🇬 +234
+                  </span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="80 1234 5678"
+                    className="flex-1 bg-transparent px-3 py-3 text-sm text-white placeholder:text-[var(--jmb-text-mute)] focus:outline-none tracking-wider"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+              {error && (
+                <div className="text-sm rounded-xl px-4 py-3"
+                     style={{ background: "rgba(255,92,122,0.08)", border: "1px solid rgba(255,92,122,0.25)", color: "var(--jmb-red)" }}>
+                  {error}
+                </div>
+              )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#0052CC] text-white py-3 rounded-xl font-semibold text-sm hover:bg-blue-700 disabled:opacity-50 transition"
-            >
-              {loading ? "Sending OTP..." : "Continue"}
-            </button>
-          </form>
+              <button type="submit" disabled={loading} className="jmb-btn w-full">
+                {loading ? "Sending OTP..." : "Continue"}
+              </button>
+            </form>
+          </div>
         </div>
 
-        <p className="text-center text-blue-200 text-xs mt-6">
-          By continuing, you agree to our Terms & Privacy Policy
+        <p className="text-center text-[11px] text-[var(--jmb-text-mute)] mt-6 leading-relaxed">
+          By continuing, you agree to JMB's <span className="text-white/80">Terms</span> & <span className="text-white/80">Privacy Policy</span>
         </p>
       </div>
     </div>

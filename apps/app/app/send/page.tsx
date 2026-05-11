@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { BackBtn, Wordmark } from "@/components/Brand";
 
 export default function SendPage() {
   const [form, setForm] = useState({ accountNumber: "", bankCode: "", amount: "", narration: "" });
@@ -55,61 +56,119 @@ export default function SendPage() {
     }
   }
 
-  if (success) return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6">
-      <div className="bg-white rounded-2xl p-8 text-center shadow-lg max-w-sm w-full">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Transfer Successful!</h2>
-        <p className="text-gray-500 text-sm mb-6">₦{parseFloat(form.amount).toLocaleString()} sent successfully</p>
-        <button onClick={() => router.push("/home")} className="w-full bg-[#0052CC] text-white py-3 rounded-xl font-semibold">Back to Home</button>
+  if (success) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 jmb-page-in">
+        <div className="relative w-full max-w-sm">
+          <div className="absolute -inset-1 rounded-[28px] blur-2xl opacity-60 jmb-pulse" style={{ background: "var(--jmb-grad-card)" }} />
+          <div className="relative jmb-glass-hi jmb-glow rounded-[26px] p-8 text-center">
+            <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center jmb-float"
+                 style={{ background: "var(--jmb-grad-primary)" }}>
+              <svg viewBox="0 0 24 24" className="w-8 h-8 text-[#06121a]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12l5 5L20 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mt-5">Transfer successful</h2>
+            <p className="text-[var(--jmb-text-dim)] text-sm mt-2">
+              <span className="text-white font-semibold">₦{parseFloat(form.amount).toLocaleString()}</span> sent successfully
+            </p>
+            <button onClick={() => router.push("/home")} className="jmb-btn w-full mt-6">Back to Home</button>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-[#0052CC] px-6 pt-12 pb-6">
-        <button onClick={() => router.back()} className="text-white mb-4 flex items-center gap-2">← Back</button>
-        <h1 className="text-white text-2xl font-bold">Send Money</h1>
-      </div>
+    <div className="min-h-screen pb-12 jmb-page-in">
+      <div className="mx-auto max-w-md px-5 pt-10">
+        <header className="flex items-center justify-between mb-6">
+          <BackBtn onClick={() => router.back()} />
+          <Wordmark size="sm" />
+          <div className="w-10" />
+        </header>
 
-      <div className="px-6 mt-6">
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-white tracking-tight">Send money</h1>
+          <p className="text-sm text-[var(--jmb-text-dim)] mt-1">Move funds to any Nigerian bank, instantly.</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="jmb-glass rounded-3xl p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bank</label>
+            <label className="block text-[11px] uppercase tracking-[0.16em] text-[var(--jmb-text-mute)] mb-2">Recipient bank</label>
             <select
               value={form.bankCode}
               onChange={(e) => setForm({ ...form, bankCode: e.target.value })}
-              className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="jmb-input appearance-none pr-10"
               required
             >
-              <option value="">Select bank</option>
-              {banks.map((b) => <option key={b.code} value={b.code}>{b.name}</option>)}
+              <option value="" className="bg-[var(--jmb-bg-1)]">Select bank</option>
+              {banks.map((b) => (
+                <option key={b.code} value={b.code} className="bg-[var(--jmb-bg-1)]">{b.name}</option>
+              ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Account number</label>
-            <input type="text" value={form.accountNumber} onChange={(e) => setForm({ ...form, accountNumber: e.target.value })}
-              placeholder="0123456789" maxLength={10} className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+            <label className="block text-[11px] uppercase tracking-[0.16em] text-[var(--jmb-text-mute)] mb-2">Account number</label>
+            <input
+              type="text"
+              value={form.accountNumber}
+              onChange={(e) => setForm({ ...form, accountNumber: e.target.value })}
+              placeholder="0123456789"
+              maxLength={10}
+              className="jmb-input tracking-widest"
+              required
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₦)</label>
-            <input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })}
-              placeholder="0.00" min="1" className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+            <label className="block text-[11px] uppercase tracking-[0.16em] text-[var(--jmb-text-mute)] mb-2">Amount</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--jmb-text-dim)]">₦</span>
+              <input
+                type="number"
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                placeholder="0.00"
+                min="1"
+                className="jmb-input pl-8 text-lg font-semibold"
+                required
+              />
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {[1000, 2500, 5000, 10000].map((q) => (
+                <button
+                  key={q}
+                  type="button"
+                  onClick={() => setForm({ ...form, amount: String(q) })}
+                  className="jmb-chip hover:bg-white/10 hover:text-white transition"
+                >
+                  +₦{q.toLocaleString()}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Narration</label>
-            <input type="text" value={form.narration} onChange={(e) => setForm({ ...form, narration: e.target.value })}
-              placeholder="Payment for..." className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label className="block text-[11px] uppercase tracking-[0.16em] text-[var(--jmb-text-mute)] mb-2">Narration</label>
+            <input
+              type="text"
+              value={form.narration}
+              onChange={(e) => setForm({ ...form, narration: e.target.value })}
+              placeholder="What's it for?"
+              className="jmb-input"
+            />
           </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && (
+            <div className="text-sm rounded-xl px-4 py-3"
+                 style={{ background: "rgba(255,92,122,0.08)", border: "1px solid rgba(255,92,122,0.25)", color: "var(--jmb-red)" }}>
+              {error}
+            </div>
+          )}
 
-          <button type="submit" disabled={loading}
-            className="w-full bg-[#0052CC] text-white py-3 rounded-xl font-semibold disabled:opacity-50 transition">
+          <button type="submit" disabled={loading} className="jmb-btn w-full">
             {loading ? "Sending..." : "Send Money"}
           </button>
         </form>
