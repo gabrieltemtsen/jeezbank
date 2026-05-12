@@ -3,28 +3,63 @@ import { getAdminSession } from "@/lib/auth";
 import { getTransactions } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
+import Pagination from "@/components/Pagination";
 
-export default async function TransactionsPage() {
+export default async function TransactionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; status?: string; accountNumber?: string }>;
+}) {
   const session = await getAdminSession();
   if (!session) redirect("/login");
 
-  let transactions: Record<string, unknown>[] = [];
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp.page || "1"));
+  const limit = 50;
+
+  let transactions: Record<string, any>[] = [];
+  let total = 0;
+
   try {
-    const data = await getTransactions({ limit: 50 });
-    transactions = data.data || data || [];
+    const data = await getTransactions({
+      page,
+      limit,
+      status: sp.status || undefined,
+      accountNumber: sp.accountNumber || undefined,
+    });
+    const payload = data.data ?? data;
+    transactions = payload.items ?? payload.data ?? payload.transactions ?? payload ?? [];
+    total = payload.total ?? payload.meta?.total ?? transactions.length;
   } catch {}
 
-  const total = transactions.length;
-  const credits = transactions.filter((t) => t.type === "CREDIT").length;
-  const debits = transactions.filter((t) => t.type === "DEBIT").length;
+  const credits = transactions.filter((t) => String(t.type).toUpperCase() === "CREDIT").length;
+  const debits = transactions.filter((t) => String(t.type).toUpperCase() === "DEBIT").length;
   const totalVolume = transactions.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
 
   return (
     <Shell role={session.role} name={session.name}>
       <PageHeader
         title="Transaction Monitoring"
-        subtitle={`${total} recent transactions · live from FuseCore`}
-        actions={<button className="jmb-btn-ghost jmb-btn-sm">Export CSV</button>}
+        subtitle={`${total.toLocaleString()} transactions · live from FuseCore`}
+        actions={
+          <form className="flex gap-2 items-center">
+            <input
+              name="accountNumber"
+              placeholder="Account number"
+              defaultValue={sp.accountNumber}
+              className="jmb-input w-44"
+            />
+            <select name="status" defaultValue={sp.status || ""} className="jmb-input w-44">
+              <option value="">All statuses</option>
+              <option value="PENDING">PENDING</option>
+              <option value="PROCESSING">PROCESSING</option>
+              <option value="SUCCESSFUL">SUCCESSFUL</option>
+              <option value="FAILED">FAILED</option>
+              <option value="REVERSED">REVERSED</option>
+            </select>
+            <button className="jmb-btn jmb-btn-sm">Filter</button>
+          </form>
+        }
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -51,15 +86,17 @@ export default async function TransactionsPage() {
                 <tr><td colSpan={6} className="text-center text-[var(--jmb-text-mute)] py-12">No transactions found</td></tr>
               ) : (
                 transactions.map((tx, i) => {
-                  const isCredit = tx.type === "CREDIT";
+                  const isCredit = String(tx.type || "").toUpperCase() === "CREDIT";
                   const status = String(tx.status || "");
                   const statusPill =
-                    status === "SUCCESS" || status === "COMPLETED" ? "jmb-pill-green" :
-                    status === "PENDING" ? "jmb-pill-amber" :
+                    status === "SUCCESS" || status === "SUCCESSFUL" || status === "COMPLETED" ? "jmb-pill-green" :
+                    status === "PENDING" || status === "PROCESSING" ? "jmb-pill-amber" :
                     status === "FAILED" || status === "REVERSED" ? "jmb-pill-red" : "jmb-pill-mute";
                   return (
                     <tr key={i}>
-                      <td className="font-mono text-xs text-[var(--jmb-text-dim)]">{String(tx.reference || "").slice(0, 16)}…</td>
+                      <td className="font-mono text-xs text-[var(--jmb-text-dim)]">
+                        <a className="hover:underline" href={`/transactions/${tx.id}`}>{String(tx.reference || tx.id || "").slice(0, 16)}…</a>
+                      </td>
                       <td>
                         <span className={`jmb-pill ${isCredit ? "jmb-pill-green" : "jmb-pill-red"}`}>
                           <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -82,6 +119,14 @@ export default async function TransactionsPage() {
           </table>
         </div>
       </div>
+
+      <Pagination
+        basePath="/transactions"
+        page={page}
+        pageSize={limit}
+        total={total}
+        query={{ status: sp.status, accountNumber: sp.accountNumber }}
+      />
     </Shell>
   );
 }
