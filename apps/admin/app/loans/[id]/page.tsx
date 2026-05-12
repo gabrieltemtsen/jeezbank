@@ -155,44 +155,19 @@ function Panel({
   subtitle: string;
   raw: any;
 }) {
-  const err = raw?.__error as string | undefined;
-  const { items } = unwrapList<any>(raw);
-
+  const error = raw && typeof raw === "object" && "__error" in raw ? String((raw as any).__error) : null;
   return (
     <div className="jmb-glass rounded-3xl p-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="min-w-0">
           <h3 className="text-sm font-semibold text-white">{title}</h3>
-          <p className="text-[11px] text-[var(--jmb-text-mute)] mt-1 font-mono">{subtitle}</p>
+          <p className="text-[11px] text-[var(--jmb-text-mute)] mt-0.5 font-mono">{subtitle}</p>
         </div>
-        <span className="jmb-pill jmb-pill-mute">{err ? "error" : `${items.length} item(s)`}</span>
       </div>
-
-      {err ? (
-        <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-[12px] text-red-200">
-          {err}
-        </div>
-      ) : items.length === 0 ? (
-        <div className="mt-4 text-[12px] text-[var(--jmb-text-dim)]">No records yet.</div>
-      ) : (
-        <div className="mt-4 space-y-2">
-          {items.slice(0, 6).map((it, idx) => (
-            <div key={idx} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-              <div className="text-[11px] text-white font-medium">{it.id || it.reference || it.date || `Item ${idx + 1}`}</div>
-              <div className="text-[11px] text-[var(--jmb-text-dim)] font-mono overflow-auto">
-                {JSON.stringify(it)}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <details className="mt-4">
-        <summary className="text-[11px] text-[var(--jmb-text-dim)] cursor-pointer select-none">Show raw response</summary>
-        <pre className="mt-2 text-[11px] text-[var(--jmb-text-dim)] overflow-auto max-h-64 rounded-xl p-3 jmb-glass-hi font-mono leading-relaxed">
-          {JSON.stringify(raw, null, 2)}
-        </pre>
-      </details>
+      <DataError title={`Couldn't load ${title.toLowerCase()}`} message={error} />
+      <pre className="mt-2 text-[11px] text-[var(--jmb-text-dim)] overflow-auto max-h-64 rounded-xl p-3 jmb-glass-hi font-mono leading-relaxed">
+        {raw ? JSON.stringify(raw, null, 2) : "—"}
+      </pre>
     </div>
   );
 }
