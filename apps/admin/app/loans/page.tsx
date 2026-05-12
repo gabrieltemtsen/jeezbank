@@ -16,7 +16,7 @@ export default async function LoansPage() {
   let loans: Record<string, unknown>[] = [];
   let fetchError: string | null = null;
   try {
-    const raw = await getLoans({ limit: 50 });
+    const raw = await getLoans({ limit: 50, page: 1 });
     const { items } = unwrapList<Record<string, unknown>>(raw);
     loans = items;
   } catch (err) {
