@@ -21,6 +21,10 @@ const navItems: Nav[] = [
     icon: I(<><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.5-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M19 20c-.4-2.4-1.6-3.7-3.5-4.4"/></>),
   },
   {
+    label: "Accounts", href: "/accounts", roles: ["MANAGER", "OFFICER", "CUSTOMER_CARE"],
+    icon: I(<><path d="M4 7h16"/><path d="M6 11h12"/><path d="M6 15h12"/><path d="M4 19h16"/></>),
+  },
+  {
     label: "Transactions", href: "/transactions", roles: ["MANAGER", "OFFICER", "CUSTOMER_CARE"],
     icon: I(<><path d="M4 7h13"/><path d="M14 4l3 3-3 3"/><path d="M20 17H7"/><path d="M10 20l-3-3 3-3"/></>),
   },

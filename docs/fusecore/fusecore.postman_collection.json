@@ -1,0 +1,3813 @@
+{
+  "info": {
+    "name": "FuseCore API",
+    "description": "FuseCore — A fintech-grade core banking API.\n\nSupports: Customers, Accounts, Transactions, Payments, Loans, Double-Entry Ledger, and Products.\n\n**Base URL:** `{{baseUrl}}/api/v1`\n\n**Authentication:** All endpoints (except `/auth/register` and `/auth/login`) require a Bearer token. Obtain one via `POST /auth/login` and set it as the `token` collection variable.\n\n**Amounts:** All monetary values are in the lowest denomination (e.g., Kobo for NGN). 100 = ₦1.00.\n\n**Rate Limiting:**\n- Global: 100 requests / 60 seconds\n- Sensitive operations (transfers, loan actions, liens): 10 requests / 60 seconds",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "apiKey",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminApiKey",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-API-Key",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Customers",
+      "description": "Customer onboarding and lifecycle management. Supports both INDIVIDUAL and CORPORATE customer types with KYC tiers and document management.",
+      "item": [
+        {
+          "name": "Create Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Amaka\",\n  \"lastName\": \"Obi\",\n  \"email\": \"amaka.obi@example.com\",\n  \"phone\": \"08012345678\",\n  \"middleName\": \"Chioma\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"gender\": \"FEMALE\",\n  \"type\": \"INDIVIDUAL\",\n  \"identityType\": \"NIN\",\n  \"identityNumber\": \"12345678901\",\n  \"bvn\": \"22212345678\",\n  \"address\": {\n    \"street\": \"12 Victoria Island\",\n    \"city\": \"Lagos\",\n    \"state\": \"Lagos\",\n    \"country\": \"Nigeria\",\n    \"postalCode\": \"101241\"\n  }\n}"
+            },
+            "description": "Onboard a new individual or corporate customer.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\nFor corporate customers, include the `corporateProfile` object and set `type` to `CORPORATE`.\n\n**Gender:** `MALE` | `FEMALE` | `OTHER`\n**Type:** `INDIVIDUAL` | `CORPORATE`\n**IdentityType:** `NIN` | `BVN` | `PASSPORT` | `DRIVERS_LICENSE` | `VOTERS_CARD`"
+          }
+        },
+        {
+          "name": "Create Corporate Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Emeka\",\n  \"lastName\": \"Nwosu\",\n  \"email\": \"emeka@techcorp.com\",\n  \"phone\": \"08099887766\",\n  \"type\": \"CORPORATE\",\n  \"corporateProfile\": {\n    \"businessName\": \"TechCorp Nigeria Ltd\",\n    \"rcNumber\": \"RC123456\",\n    \"taxId\": \"TIN-98765\",\n    \"incorporationDate\": \"2015-03-10\"\n  },\n  \"address\": {\n    \"street\": \"Plot 5, Central Business District\",\n    \"city\": \"Abuja\",\n    \"state\": \"FCT\",\n    \"country\": \"Nigeria\"\n  }\n}"
+            },
+            "description": "Onboard a corporate/business customer. The `corporateProfile` field is required when `type` is `CORPORATE`.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`"
+          }
+        },
+        {
+          "name": "List Customers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Records per page (default: 20)"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status: ACTIVE | INACTIVE | SUSPENDED | BLACKLISTED",
+                  "disabled": true
+                },
+                {
+                  "key": "kycLevel",
+                  "value": "",
+                  "description": "Filter by KYC tier: TIER_0 | TIER_1 | TIER_2 | TIER_3",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Free-text search by name or email",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve a paginated list of customers with optional filters.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Customer by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "1"
+              ]
+            },
+            "description": "Fetch a single customer by their internal numeric ID.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Customer by Customer Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/no/CUS-000001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "no",
+                "CUS-000001"
+              ]
+            },
+            "description": "Fetch a customer using their generated customer number (e.g., `CUS-000001`).\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Search Customer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/search?bvn=22212345678",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "bvn",
+                  "value": "22212345678",
+                  "description": "Exact BVN match",
+                  "disabled": false
+                },
+                {
+                  "key": "nin",
+                  "value": "",
+                  "description": "Exact NIN match",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "",
+                  "description": "Exact phone number match",
+                  "disabled": true
+                },
+                {
+                  "key": "email",
+                  "value": "",
+                  "description": "Exact email match",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Search for a customer by exact match on BVN, NIN, phone number, or email. Useful for deduplication checks during onboarding.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Update Customer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"08098765432\",\n  \"address\": {\n    \"street\": \"45 Adeola Odeku\",\n    \"city\": \"Lagos\",\n    \"state\": \"Lagos\",\n    \"country\": \"Nigeria\"\n  }\n}"
+            },
+            "description": "Update customer profile fields. All fields are optional — only provided fields are updated.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`"
+          }
+        },
+        {
+          "name": "Update Customer Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/1/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "1",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"SUSPENDED\"\n}"
+            },
+            "description": "Change the lifecycle status of a customer account.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`\n\n**Status values:** `ACTIVE` | `INACTIVE` | `SUSPENDED` | `BLACKLISTED`"
+          }
+        },
+        {
+          "name": "Update KYC Level",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/1/kyc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "1",
+                "kyc"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kycLevel\": \"TIER_2\"\n}"
+            },
+            "description": "Upgrade or downgrade a customer's KYC verification tier.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**KYC Tiers:**\n- `TIER_0` — Unverified (default)\n- `TIER_1` — Basic verification (phone/email)\n- `TIER_2` — ID verified (BVN/NIN)\n- `TIER_3` — Full KYC (address + documents)"
+          }
+        },
+        {
+          "name": "Add Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/1/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "1",
+                "documents"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentType\": \"NIN_CARD\",\n  \"documentUrl\": \"https://storage.example.com/docs/nin-john-doe.pdf\",\n  \"description\": \"NIN slip uploaded during TIER_2 upgrade\"\n}"
+            },
+            "description": "Attach a KYC document to a customer profile.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Document Types:** `NIN_CARD` | `BVN_SLIP` | `PASSPORT` | `DRIVERS_LICENSE` | `VOTERS_CARD` | `UTILITY_BILL` | `BANK_STATEMENT` | `CAC_CERTIFICATE` | `OTHER`\n\nThe `documentUrl` must be a publicly accessible URL."
+          }
+        },
+        {
+          "name": "List Customer Documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/1/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "1",
+                "documents"
+              ]
+            },
+            "description": "Retrieve all KYC documents associated with a customer.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "description": "Account opening, management, balance enquiries, lien management, and fixed deposit operations.",
+      "item": [
+        {
+          "name": "Open Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"type\": \"SAVINGS\",\n  \"currency\": \"NGN\",\n  \"alias\": \"Primary Savings\",\n  \"dailyTransactionLimit\": 500000\n}"
+            },
+            "description": "Open a new bank account for an existing customer.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Account Types:** `SAVINGS` | `CURRENT` | `FIXED_DEPOSIT` | `DOMICILIARY` | `LOAN`\n**Currency:** `NGN` | `USD` | `GBP` | `EUR` (default: `NGN`)\n\nFor a Fixed Deposit account, provide `maturityDate`.\nFor overdraft-enabled accounts, set `allowOverdraft: true` and provide `overdraftLimit`."
+          }
+        },
+        {
+          "name": "List Accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "customerId",
+                  "value": "",
+                  "description": "Filter by customer ID",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "SAVINGS | CURRENT | FIXED_DEPOSIT | DOMICILIARY | LOAN",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "ACTIVE | INACTIVE | FROZEN | CLOSED | DORMANT | PND",
+                  "disabled": true
+                },
+                {
+                  "key": "currency",
+                  "value": "",
+                  "description": "NGN | USD | GBP | EUR",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Paginated list of accounts with optional filters.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Account by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts",
+                "1"
+              ]
+            },
+            "description": "Fetch a single account by its internal numeric ID.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Account by Account Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/no/0123456789",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts",
+                "no",
+                "0123456789"
+              ]
+            },
+            "description": "Fetch account details using the 10-digit NUBAN account number.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Accounts by Customer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/customer/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts",
+                "customer",
+                "1"
+              ]
+            },
+            "description": "List all accounts belonging to a specific customer.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Account Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/no/0123456789/balance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts",
+                "no",
+                "0123456789",
+                "balance"
+              ]
+            },
+            "description": "Retrieve the current available balance for an account.\n\nReturns `availableBalance` and `ledgerBalance` in Kobo (lowest denomination).\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`"
+          }
+        },
+        {
+          "name": "Search Account",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/search?accountNumber=0123456789",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "accountNumber",
+                  "value": "0123456789",
+                  "description": "Exact account number"
+                }
+              ]
+            },
+            "description": "Exact-match search for an account by account number. Useful for transfer name-enquiry flows.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Update Account",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts",
+                "1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alias\": \"Main Account\",\n  \"dailyTransactionLimit\": 1000000,\n  \"allowOverdraft\": true,\n  \"overdraftLimit\": 50000\n}"
+            },
+            "description": "Update account settings. `customerId` cannot be changed after account creation.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`"
+          }
+        },
+        {
+          "name": "Update Account Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/1/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts",
+                "1",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"FROZEN\",\n  \"reason\": \"Suspicious activity detected\"\n}"
+            },
+            "description": "Update the operational status of an account.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`\n\n**Status values:** `ACTIVE` | `INACTIVE` | `FROZEN` | `CLOSED` | `DORMANT` | `PND`\n\n`PND` = Post No Debit (debits blocked, credits allowed)"
+          }
+        },
+        {
+          "name": "Place Lien",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/1/lien",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts",
+                "1",
+                "lien"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 50000,\n  \"reason\": \"Court-ordered lien on account per case #CT-2024-0099\"\n}"
+            },
+            "description": "Lock (ring-fence) a specific amount in an account. The liened funds cannot be debited until released.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Throttled:** 10 requests per 60 seconds\n\n`amount` is in Kobo. 50000 = ₦500.00"
+          }
+        },
+        {
+          "name": "Release Lien",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/1/lien",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts",
+                "1",
+                "lien"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 50000,\n  \"reason\": \"Lien released — court order discharged\"\n}"
+            },
+            "description": "Unlock previously liened funds on an account.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Throttled:** 10 requests per 60 seconds"
+          }
+        },
+        {
+          "name": "Close Fixed Deposit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/accounts/1/close-fixed-deposit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts",
+                "1",
+                "close-fixed-deposit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"closureType\": \"STANDARD\",\n  \"reason\": \"Maturity date reached\"\n}"
+            },
+            "description": "Terminate a Fixed Deposit account and release funds.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Throttled:** 10 requests per 60 seconds\n\n**Closure Types:**\n- `STANDARD` — Normal closure at or after maturity date (full interest paid)\n- `PREMATURE` — Early closure before maturity date (interest may be penalised)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "description": "Fund transfers, direct debits, credits, and transaction history. All amounts in Kobo (minimum: 100 Kobo = ₦1.00).",
+      "item": [
+        {
+          "name": "Internal Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/transfer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "transfer"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountNumber\": \"0123456789\",\n  \"destinationAccountNumber\": \"0987654321\",\n  \"amount\": 500000,\n  \"narration\": \"Rent payment for April 2025\",\n  \"channel\": \"API\",\n  \"idempotencyKey\": \"txn-rent-apr-2025-001\"\n}"
+            },
+            "description": "Transfer funds between two internal accounts.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Throttled:** 10 requests per 60 seconds\n\n`amount` is in Kobo. 500000 = ₦5,000.00\n\n`idempotencyKey` — supply a unique string to prevent duplicate transactions on retries. The same key will return the original transaction instead of creating a new one.\n\n**Channel:** `MOBILE` | `WEB` | `USSD` | `API` | `INTERNAL` | `ATM` | `POS` | `TELLER`"
+          }
+        },
+        {
+          "name": "Debit Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/debit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "debit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": \"0123456789\",\n  \"amount\": 200000,\n  \"narration\": \"Charge: account maintenance fee\",\n  \"channel\": \"INTERNAL\",\n  \"reference\": \"FEE-2025-04-001\"\n}"
+            },
+            "description": "Directly debit an account (e.g., fee charges, reversals, manual adjustments).\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Throttled:** 10 requests per 60 seconds\n\n`reference` is optional — provide one for traceability."
+          }
+        },
+        {
+          "name": "Credit Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/credit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "credit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": \"0123456789\",\n  \"amount\": 1000000,\n  \"narration\": \"Salary payment - April 2025\",\n  \"channel\": \"TELLER\",\n  \"reference\": \"SAL-2025-04-001\"\n}"
+            },
+            "description": "Directly credit an account (e.g., salary disbursements, inbound remittances, manual top-ups).\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Throttled:** 10 requests per 60 seconds"
+          }
+        },
+        {
+          "name": "List Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "accountNumber",
+                  "value": "",
+                  "description": "Filter by account number",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "PENDING | PROCESSING | SUCCESSFUL | FAILED | REVERSED",
+                  "disabled": true
+                },
+                {
+                  "key": "fromDate",
+                  "value": "",
+                  "description": "ISO 8601 start date e.g. 2025-01-01",
+                  "disabled": true
+                },
+                {
+                  "key": "toDate",
+                  "value": "",
+                  "description": "ISO 8601 end date e.g. 2025-12-31",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve paginated transaction history with date-range and status filters.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Transaction by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "1"
+              ]
+            },
+            "description": "Fetch a single transaction by its internal ID.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Transaction by Reference",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/ref/TXN-2025-001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "ref",
+                "TXN-2025-001"
+              ]
+            },
+            "description": "Fetch a transaction using its unique reference string.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Transaction Receipt",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/1/receipt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "1",
+                "receipt"
+              ]
+            },
+            "description": "Generate a structured receipt for a completed transaction, suitable for display to end-users.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "description": "Payment initiation supporting internal transfers, external bank transfers, bill payments, airtime, data, and card funding.",
+      "item": [
+        {
+          "name": "Initiate Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"INTERNAL_TRANSFER\",\n  \"sourceAccountNumber\": \"0123456789\",\n  \"amount\": 250000,\n  \"destinationAccountNumber\": \"0987654321\",\n  \"narration\": \"Payment for consulting services\",\n  \"channel\": \"API\",\n  \"idempotencyKey\": \"pay-consulting-2025-04-001\"\n}"
+            },
+            "description": "Initiate a payment of any type.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Throttled:** 10 requests per 60 seconds\n\n**Payment Types:**\n- `INTERNAL_TRANSFER` — Between accounts within the same bank\n- `EXTERNAL_TRANSFER` — To an account at another bank (requires `destinationBankCode`, `destinationAccountName`, `destinationBankName`)\n- `BILL_PAYMENT` — Utility or bill payment\n- `AIRTIME` — Airtime top-up\n- `DATA` — Data bundle purchase\n- `CARD_FUNDING` — Fund a card from an account\n\n`idempotencyKey` prevents duplicate payments on retry."
+          }
+        },
+        {
+          "name": "Initiate External Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"EXTERNAL_TRANSFER\",\n  \"sourceAccountNumber\": \"0123456789\",\n  \"amount\": 500000,\n  \"destinationAccountNumber\": \"2023456789\",\n  \"destinationBankCode\": \"058\",\n  \"destinationAccountName\": \"Chukwuemeka Eze\",\n  \"destinationBankName\": \"GTBank\",\n  \"narration\": \"Invoice #INV-0042 settlement\",\n  \"channel\": \"API\",\n  \"idempotencyKey\": \"ext-inv-0042-2025\"\n}"
+            },
+            "description": "Send funds to an account at another bank.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\nFor external transfers, the following fields are required:\n- `destinationAccountNumber`\n- `destinationBankCode` (CBN bank sort code, e.g., `058` for GTBank)\n- `destinationAccountName`\n- `destinationBankName`"
+          }
+        },
+        {
+          "name": "List Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "accountNumber",
+                  "value": "",
+                  "description": "Filter by source account number",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "PENDING | PROCESSING | SUCCESSFUL | FAILED | REVERSED | CANCELLED",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "INTERNAL_TRANSFER | EXTERNAL_TRANSFER | BILL_PAYMENT | AIRTIME | DATA | CARD_FUNDING",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Paginated list of payments with optional filters.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Payment by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments",
+                "1"
+              ]
+            },
+            "description": "Fetch a single payment by its internal ID.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Payment by Reference",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/ref/PAY-2025-001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments",
+                "ref",
+                "PAY-2025-001"
+              ]
+            },
+            "description": "Fetch a payment using its unique reference string.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loans",
+      "description": "Full loan lifecycle: application, review, approval/rejection, disbursement, repayment scheduling, write-offs, recoveries, and foreclosures.",
+      "item": [
+        {
+          "name": "Apply for Loan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"type\": \"PERSONAL\",\n  \"principalAmount\": 500000,\n  \"interestRate\": 5.5,\n  \"tenorDays\": 180,\n  \"repaymentFrequency\": \"MONTHLY\",\n  \"purpose\": \"Business working capital\",\n  \"disbursementAccountId\": 1\n}"
+            },
+            "description": "Submit a new loan application.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n`principalAmount` is in Kobo. Minimum: 100000 Kobo (₦1,000.00)\n`interestRate` is a percentage (0–100). E.g., `5.5` = 5.5% p.a.\n`tenorDays` is the loan duration in days. Minimum: 30 days.\n\n**Loan Types:** `PERSONAL` | `BUSINESS` | `MORTGAGE` | `AUTO` | `STUDENT`\n\n**Repayment Frequency:** `DAILY` | `WEEKLY` | `BIWEEKLY` | `MONTHLY` | `QUARTERLY` | `BULLET`"
+          }
+        },
+        {
+          "name": "List Loans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "customerId",
+                  "value": "",
+                  "description": "Filter by customer ID",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "PENDING | UNDER_REVIEW | APPROVED | DISBURSED | ACTIVE | CLOSED | DEFAULTED | REJECTED | WRITTEN_OFF",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "PERSONAL | BUSINESS | MORTGAGE | AUTO | STUDENT",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Paginated list of loans with optional filters.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Loan by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1"
+              ]
+            },
+            "description": "Fetch a single loan by its internal ID.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Loan by Reference",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/ref/LOAN-2025-001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "ref",
+                "LOAN-2025-001"
+              ]
+            },
+            "description": "Fetch a loan using its unique reference string.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Repayment Schedule",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1/schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1",
+                "schedule"
+              ]
+            },
+            "description": "Retrieve the full amortisation / repayment schedule for a loan.\n\nReturns each instalment with due date, principal portion, interest portion, and total amount.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Repayment History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1/repayments?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1",
+                "repayments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Paginated history of all repayments made against a loan.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Approve Loan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1",
+                "approve"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approvedAmount\": 500000,\n  \"approvedInterestRate\": 5.0,\n  \"approvedTenorDays\": 180\n}"
+            },
+            "description": "Approve a loan application. The approver can adjust amount, interest rate, and tenor from the originally requested values.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`\n\n**Throttled:** 10 requests per 60 seconds\n\nAll three fields are optional — if omitted, the original application values are used."
+          }
+        },
+        {
+          "name": "Reject Loan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1",
+                "reject"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Insufficient credit score and high debt-to-income ratio\"\n}"
+            },
+            "description": "Reject a loan application with a mandatory reason.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`\n\n`reason` is required and will be stored on the loan record."
+          }
+        },
+        {
+          "name": "Disburse Loan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1/disburse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1",
+                "disburse"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"disbursementAccountNumber\": \"0123456789\"\n}"
+            },
+            "description": "Disburse an approved loan to the customer's account. This triggers the actual fund transfer.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Throttled:** 10 requests per 60 seconds\n\n`disbursementAccountNumber` is optional if a `disbursementAccountId` was set on the application."
+          }
+        },
+        {
+          "name": "Record Repayment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1/repay",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1",
+                "repay"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 95000,\n  \"sourceAccountNumber\": \"0123456789\",\n  \"narration\": \"Monthly instalment - April 2025\"\n}"
+            },
+            "description": "Record a repayment against an active loan. The payment is deducted from the source account and applied to the loan balance (interest first, then principal).\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Throttled:** 10 requests per 60 seconds\n\nMinimum repayment: 100 Kobo."
+          }
+        },
+        {
+          "name": "Write Off Loan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1/write-off",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1",
+                "write-off"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Loan classified as loss after 180 days past due\"\n}"
+            },
+            "description": "Write off an ACTIVE or DEFAULTED loan. Moves the loan to `WRITTEN_OFF` status and posts corresponding ledger entries.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`\n\n**Throttled:** 10 requests per 60 seconds"
+          }
+        },
+        {
+          "name": "Undo Write-Off",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1/undo-write-off",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1",
+                "undo-write-off"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "description": "Reverse a loan write-off, returning the loan to `DEFAULTED` status.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`\n\n**Throttled:** 10 requests per 60 seconds\n\nNo request body is required."
+          }
+        },
+        {
+          "name": "Record Recovery",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1/recover",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1",
+                "recover"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 200000,\n  \"sourceAccountNumber\": \"0123456789\",\n  \"narration\": \"Recovery via debt collection agency\"\n}"
+            },
+            "description": "Record a recovery payment on a defaulted or written-off loan.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n**Throttled:** 10 requests per 60 seconds"
+          }
+        },
+        {
+          "name": "Foreclose Loan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1/foreclose",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1",
+                "foreclose"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"settlementAmount\": 350000,\n  \"sourceAccountNumber\": \"0123456789\",\n  \"reason\": \"Customer full-settlement offer accepted\"\n}"
+            },
+            "description": "Foreclose a loan by collecting a settlement amount — the remaining outstanding balance is waived.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`\n\n**Throttled:** 10 requests per 60 seconds"
+          }
+        },
+        {
+          "name": "Waive Interest",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loans/1/waive-interest",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loans",
+                "1",
+                "waive-interest"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 25000,\n  \"reason\": \"Goodwill interest waiver for long-standing customer\"\n}"
+            },
+            "description": "Waive a portion (or all) of the accrued interest on an active loan.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`\n\n**Throttled:** 10 requests per 60 seconds\n\n`amount` is in Kobo."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ledger",
+      "description": "Double-entry bookkeeping: GL account management, journal entry posting, reversals, and trial balance generation.",
+      "item": [
+        {
+          "name": "Create GL Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ledger/gl-accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ledger",
+                "gl-accounts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"glCode\": \"1001\",\n  \"name\": \"Cash and Cash Equivalents\",\n  \"description\": \"Physical cash and demand deposits\",\n  \"type\": \"ASSET\",\n  \"currency\": \"NGN\"\n}"
+            },
+            "description": "Create a General Ledger (GL) account for double-entry bookkeeping.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`\n\n**GL Account Types:** `ASSET` | `LIABILITY` | `EQUITY` | `REVENUE` | `EXPENSE`\n\n`parentGlCode` — optionally link to a parent GL for hierarchical reporting.\n\n**Standard GL codes (example):**\n- `1001` — Cash\n- `2001` — Customer Deposits (Liability)\n- `3001` — Retained Earnings (Equity)\n- `4001` — Interest Income (Revenue)\n- `5001` — Operating Expenses"
+          }
+        },
+        {
+          "name": "List GL Accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ledger/gl-accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ledger",
+                "gl-accounts"
+              ]
+            },
+            "description": "Retrieve all General Ledger accounts.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get GL Account Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ledger/gl-accounts/1001/balance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ledger",
+                "gl-accounts",
+                "1001",
+                "balance"
+              ]
+            },
+            "description": "Get the current debit/credit balance for a specific GL account by its GL code.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Trial Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ledger/trial-balance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ledger",
+                "trial-balance"
+              ]
+            },
+            "description": "Generate a trial balance report summarising total debits and credits across all GL accounts. Debits must equal credits (double-entry integrity check).\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`"
+          }
+        },
+        {
+          "name": "Post Ledger Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ledger/entries",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ledger",
+                "entries"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"debitGlCode\": \"5001\",\n  \"creditGlCode\": \"1001\",\n  \"amount\": 150000,\n  \"narration\": \"Monthly office rent expense\",\n  \"transactionRef\": \"TXN-2025-0099\"\n}"
+            },
+            "description": "Post a double-entry journal. Every journal must have exactly one debit GL and one credit GL of equal amount, maintaining the accounting equation.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`\n\n`amount` is in Kobo. Both GL codes must exist. Debit amount always equals credit amount."
+          }
+        },
+        {
+          "name": "Reverse Ledger Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ledger/entries/reverse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ledger",
+                "entries",
+                "reverse"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entryRef\": \"JNL-2025-0099\",\n  \"reason\": \"Incorrect GL codes used — reposting with correction\"\n}"
+            },
+            "description": "Reverse a previously posted ledger entry. Creates a mirror/offsetting journal entry, changing the original entry's status to `REVERSED`.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`"
+          }
+        },
+        {
+          "name": "List Ledger Entries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ledger/entries?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ledger",
+                "entries"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "glCode",
+                  "value": "",
+                  "description": "Filter by GL account code",
+                  "disabled": true
+                },
+                {
+                  "key": "transactionRef",
+                  "value": "",
+                  "description": "Filter by transaction reference",
+                  "disabled": true
+                },
+                {
+                  "key": "fromDate",
+                  "value": "",
+                  "description": "ISO 8601 start date",
+                  "disabled": true
+                },
+                {
+                  "key": "toDate",
+                  "value": "",
+                  "description": "ISO 8601 end date",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Paginated list of ledger journal entries with optional filters.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Ledger Entry by Reference",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ledger/entries/JNL-2025-0099",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ledger",
+                "entries",
+                "JNL-2025-0099"
+              ]
+            },
+            "description": "Fetch a single ledger entry by its unique journal reference.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `VIEWER`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "description": "Banking product catalogue management — savings, current, fixed deposit, domiciliary, and loan product configurations.",
+      "item": [
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productCode\": \"SAV-001\",\n  \"name\": \"Regular Savings Account\",\n  \"description\": \"Standard savings product with monthly interest accrual\",\n  \"type\": \"SAVINGS\",\n  \"interestRate\": 4.5,\n  \"minBalance\": 100000,\n  \"maxBalance\": 100000000,\n  \"dailyTransactionLimit\": 1000000,\n  \"currency\": \"NGN\",\n  \"allowOverdraft\": false\n}"
+            },
+            "description": "Create a new banking product definition.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`\n\n**Product Types:** `SAVINGS` | `CURRENT` | `FIXED_DEPOSIT` | `DOMICILIARY` | `LOAN`\n\nAll monetary values (balances, limits) are in Kobo.\n`interestRate` is a percentage (e.g., `4.5` = 4.5% p.a.)."
+          }
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "SAVINGS | CURRENT | FIXED_DEPOSIT | DOMICILIARY | LOAN",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "ACTIVE | INACTIVE",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Paginated list of all products with optional type and status filters.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "1"
+              ]
+            },
+            "description": "Fetch a single product definition by its internal ID.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`, `OPERATIONS`, `CUSTOMER_SERVICE`, `VIEWER`"
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"interestRate\": 5.0,\n  \"dailyTransactionLimit\": 2000000,\n  \"description\": \"Updated savings product — higher interest rate effective May 2025\"\n}"
+            },
+            "description": "Update product configuration. `productCode` cannot be changed after creation.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`"
+          }
+        },
+        {
+          "name": "Update Product Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/1/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "1",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"INACTIVE\"\n}"
+            },
+            "description": "Activate or deactivate a product. Deactivated products cannot be assigned to new accounts.\n\n**Roles required:** `SUPER_ADMIN`, `ADMIN`\n\n**Status:** `ACTIVE` | `INACTIVE`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Charges",
+      "description": "Charge definitions, waivers, and charge application reversal. Requires tenant X-API-Key auth. Read endpoints require charges:read; write endpoints require charges:write.",
+      "item": [
+        {
+          "name": "Create Charge Definition",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/charges/definitions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "charges",
+                "definitions"
+              ]
+            },
+            "description": "Create a fee or tax definition. Use calculationType FLAT, PERCENTAGE, TIERED, or CAPPED.\n\n**Scopes:** charges:write\n\n**Response:** 201 Created — charge definition",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chargeCode\": \"MONTHLY_MAINTENANCE_FEE\",\n  \"name\": \"Monthly maintenance fee\",\n  \"description\": \"Flat monthly account maintenance fee\",\n  \"category\": \"FEE\",\n  \"calculationType\": \"FLAT\",\n  \"amount\": 5000,\n  \"currency\": \"NGN\",\n  \"accountType\": \"SAVINGS\",\n  \"transactionType\": \"ACCOUNT_MAINTENANCE\",\n  \"appliesTo\": \"ACCOUNT\",\n  \"priority\": 100,\n  \"effectiveFrom\": \"2026-05-11\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Charge Definitions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/charges/definitions?status=ACTIVE&category=FEE",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "charges",
+                "definitions"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Optional: DRAFT | ACTIVE | RETIRED"
+                },
+                {
+                  "key": "category",
+                  "value": "FEE",
+                  "description": "Optional: FEE | TAX"
+                },
+                {
+                  "key": "taxType",
+                  "value": "",
+                  "description": "Optional: VAT | WHT | STAMP_DUTY | GENERAL",
+                  "disabled": true
+                },
+                {
+                  "key": "transactionType",
+                  "value": "",
+                  "description": "Optional transaction type filter",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List charge definitions, optionally filtered by status, category, taxType, or transactionType.\n\n**Scopes:** charges:read"
+          }
+        },
+        {
+          "name": "Update Charge Definition",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/charges/definitions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "charges",
+                "definitions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Numeric record ID"
+                }
+              ]
+            },
+            "description": "Update a charge definition by numeric ID. Body accepts any CreateChargeDefinitionDto field.\n\n**Scopes:** charges:write",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Monthly maintenance fee\",\n  \"amount\": 7500,\n  \"status\": \"ACTIVE\",\n  \"effectiveTo\": \"2026-12-31\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Charge Waiver",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/charges/waivers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "charges",
+                "waivers"
+              ]
+            },
+            "description": "Create a waiver for a charge definition, charge code, tax type, customer, account, product, or transaction type.\n\n**Scopes:** charges:write\n\n**Response:** 201 Created — charge waiver",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"waiverCode\": \"WAIVE_VIP_MAINT_2026\",\n  \"name\": \"VIP maintenance waiver\",\n  \"chargeCode\": \"MONTHLY_MAINTENANCE_FEE\",\n  \"customerId\": 1,\n  \"reason\": \"VIP customer concession\",\n  \"effectiveFrom\": \"2026-05-11\",\n  \"effectiveTo\": \"2026-12-31\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reverse Charge Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/charges/applications/:id/reverse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "charges",
+                "applications",
+                ":id",
+                "reverse"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Numeric record ID"
+                }
+              ]
+            },
+            "description": "Reverse an applied charge application by numeric ID.\n\n**Scopes:** charges:write\n\n**Response:** 200 OK — reversed charge application",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Duplicate fee posted in error\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reconciliation",
+      "description": "Operational reconciliation runs and exceptions. Requires tenant X-API-Key auth. Read endpoints require reconciliation:read; write endpoints require reconciliation:write.",
+      "item": [
+        {
+          "name": "Run Reconciliation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reconciliation/runs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reconciliation",
+                "runs"
+              ]
+            },
+            "description": "Start a reconciliation run. type defaults to FULL and businessDate defaults to the current business date when omitted.\n\n**Types:** FULL | ACCOUNT_GL | TRANSACTION_LEDGER | PAYMENT_SETTLEMENT | LOAN_GL\n**Scopes:** reconciliation:write\n\n**Response:** 201 Created — reconciliation run",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"FULL\",\n  \"businessDate\": \"2026-05-11\",\n  \"initiatedBy\": \"operations@fusecore.test\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Reconciliation Runs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reconciliation/runs?page=1&limit=20&status=COMPLETED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reconciliation",
+                "runs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Records per page"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "Optional: FULL | ACCOUNT_GL | TRANSACTION_LEDGER | PAYMENT_SETTLEMENT | LOAN_GL",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "COMPLETED",
+                  "description": "Optional: RUNNING | COMPLETED | FAILED"
+                },
+                {
+                  "key": "businessDate",
+                  "value": "",
+                  "description": "Optional date filter, e.g. 2026-05-11",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List reconciliation runs with pagination and optional type/status/businessDate filters.\n\n**Scopes:** reconciliation:read"
+          }
+        },
+        {
+          "name": "Get Reconciliation Run",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reconciliation/runs/:runRef",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reconciliation",
+                "runs",
+                ":runRef"
+              ],
+              "variable": [
+                {
+                  "key": "runRef",
+                  "value": "REC-20260511-000001",
+                  "description": "Reconciliation run reference"
+                }
+              ]
+            },
+            "description": "Fetch one reconciliation run by runRef.\n\n**Scopes:** reconciliation:read"
+          }
+        },
+        {
+          "name": "List Reconciliation Exceptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reconciliation/exceptions?page=1&limit=20&status=OPEN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reconciliation",
+                "exceptions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Records per page"
+                },
+                {
+                  "key": "status",
+                  "value": "OPEN",
+                  "description": "Optional: OPEN | ASSIGNED | IN_REVIEW | RESOLVED | WAIVED"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "Optional exception type",
+                  "disabled": true
+                },
+                {
+                  "key": "assignedTo",
+                  "value": "",
+                  "description": "Optional assignee filter",
+                  "disabled": true
+                },
+                {
+                  "key": "runRef",
+                  "value": "",
+                  "description": "Optional reconciliation run reference",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List reconciliation exceptions with pagination and optional status, type, assignedTo, or runRef filters.\n\n**Scopes:** reconciliation:read"
+          }
+        },
+        {
+          "name": "Get Reconciliation Exception",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reconciliation/exceptions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reconciliation",
+                "exceptions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Numeric record ID"
+                }
+              ]
+            },
+            "description": "Fetch one reconciliation exception by numeric ID.\n\n**Scopes:** reconciliation:read"
+          }
+        },
+        {
+          "name": "Assign Reconciliation Exception",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reconciliation/exceptions/:id/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reconciliation",
+                "exceptions",
+                ":id",
+                "assign"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Numeric record ID"
+                }
+              ]
+            },
+            "description": "Assign a reconciliation exception to an operator or team.\n\n**Scopes:** reconciliation:write",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignedTo\": \"ops.recon@fusecore.test\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Resolve Reconciliation Exception",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reconciliation/exceptions/:id/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reconciliation",
+                "exceptions",
+                ":id",
+                "resolve"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Numeric record ID"
+                }
+              ]
+            },
+            "description": "Resolve or waive a reconciliation exception. status must be RESOLVED or WAIVED.\n\n**Scopes:** reconciliation:write",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"RESOLVED\",\n  \"resolutionNotes\": \"Ledger entry was posted after delayed queue processing.\",\n  \"resolvedBy\": \"ops.recon@fusecore.test\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reporting",
+      "description": "Tenant reports and regulatory extracts. Requires tenant X-API-Key auth with reporting:read scope. Most endpoints support format=json or format=csv; CBN monthly returns supports json or xlsx.",
+      "item": [
+        {
+          "name": "Account Statements Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reporting/account-statements?accountNumber=0001234567&fromDate=2026-05-01&toDate=2026-05-11&format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reporting",
+                "account-statements"
+              ],
+              "query": [
+                {
+                  "key": "accountNumber",
+                  "value": "0001234567",
+                  "description": "Optional account number"
+                },
+                {
+                  "key": "accountId",
+                  "value": "",
+                  "description": "Optional internal account ID",
+                  "disabled": true
+                },
+                {
+                  "key": "fromDate",
+                  "value": "2026-05-01",
+                  "description": "Optional start date"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2026-05-11",
+                  "description": "Optional end date"
+                },
+                {
+                  "key": "format",
+                  "value": "json",
+                  "description": "json | csv"
+                }
+              ]
+            },
+            "description": "Generate account statement data by accountNumber or accountId.\n\n**Scopes:** reporting:read"
+          }
+        },
+        {
+          "name": "GL Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reporting/gl?glCode=1000&fromDate=2026-05-01&toDate=2026-05-11&format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reporting",
+                "gl"
+              ],
+              "query": [
+                {
+                  "key": "glCode",
+                  "value": "1000",
+                  "description": "Optional GL account code"
+                },
+                {
+                  "key": "fromDate",
+                  "value": "2026-05-01",
+                  "description": "Optional start date"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2026-05-11",
+                  "description": "Optional end date"
+                },
+                {
+                  "key": "format",
+                  "value": "json",
+                  "description": "json | csv"
+                }
+              ]
+            },
+            "description": "Generate general ledger report, optionally filtered by GL code.\n\n**Scopes:** reporting:read"
+          }
+        },
+        {
+          "name": "Trial Balance Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reporting/trial-balance?fromDate=2026-05-01&toDate=2026-05-11&format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reporting",
+                "trial-balance"
+              ],
+              "query": [
+                {
+                  "key": "fromDate",
+                  "value": "2026-05-01",
+                  "description": "Optional start date"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2026-05-11",
+                  "description": "Optional end date"
+                },
+                {
+                  "key": "format",
+                  "value": "json",
+                  "description": "json | csv"
+                }
+              ]
+            },
+            "description": "Generate trial balance report.\n\n**Scopes:** reporting:read"
+          }
+        },
+        {
+          "name": "Balance Sheet Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reporting/balance-sheet?asOfDate=2026-05-11&format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reporting",
+                "balance-sheet"
+              ],
+              "query": [
+                {
+                  "key": "asOfDate",
+                  "value": "2026-05-11",
+                  "description": "Optional as-of date"
+                },
+                {
+                  "key": "format",
+                  "value": "json",
+                  "description": "json | csv"
+                }
+              ]
+            },
+            "description": "Generate balance sheet as of a date.\n\n**Scopes:** reporting:read"
+          }
+        },
+        {
+          "name": "Profit and Loss Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reporting/profit-and-loss?fromDate=2026-05-01&toDate=2026-05-11&format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reporting",
+                "profit-and-loss"
+              ],
+              "query": [
+                {
+                  "key": "fromDate",
+                  "value": "2026-05-01",
+                  "description": "Optional start date"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2026-05-11",
+                  "description": "Optional end date"
+                },
+                {
+                  "key": "format",
+                  "value": "json",
+                  "description": "json | csv"
+                }
+              ]
+            },
+            "description": "Generate profit and loss report.\n\n**Scopes:** reporting:read"
+          }
+        },
+        {
+          "name": "Transactions Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reporting/transactions?fromDate=2026-05-01&toDate=2026-05-11&status=SUCCESSFUL&format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reporting",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "accountNumber",
+                  "value": "",
+                  "description": "Optional account number",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "Optional transaction type",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "SUCCESSFUL",
+                  "description": "Optional transaction status"
+                },
+                {
+                  "key": "channel",
+                  "value": "",
+                  "description": "Optional transaction channel",
+                  "disabled": true
+                },
+                {
+                  "key": "fromDate",
+                  "value": "2026-05-01",
+                  "description": "Optional start date"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2026-05-11",
+                  "description": "Optional end date"
+                },
+                {
+                  "key": "format",
+                  "value": "json",
+                  "description": "json | csv"
+                }
+              ]
+            },
+            "description": "Generate transaction report with optional accountNumber, type, status, and channel filters.\n\n**Scopes:** reporting:read"
+          }
+        },
+        {
+          "name": "Loan Portfolio Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reporting/loan-portfolio?status=ACTIVE&format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reporting",
+                "loan-portfolio"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Optional loan status"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "Optional loan type",
+                  "disabled": true
+                },
+                {
+                  "key": "fromDate",
+                  "value": "",
+                  "description": "Optional start date",
+                  "disabled": true
+                },
+                {
+                  "key": "toDate",
+                  "value": "",
+                  "description": "Optional end date",
+                  "disabled": true
+                },
+                {
+                  "key": "format",
+                  "value": "json",
+                  "description": "json | csv"
+                }
+              ]
+            },
+            "description": "Generate loan portfolio report with optional status and type filters.\n\n**Scopes:** reporting:read"
+          }
+        },
+        {
+          "name": "AML Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reporting/aml?reportKind=alerts&status=OPEN&format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reporting",
+                "aml"
+              ],
+              "query": [
+                {
+                  "key": "reportKind",
+                  "value": "alerts",
+                  "description": "alerts | sar"
+                },
+                {
+                  "key": "status",
+                  "value": "OPEN",
+                  "description": "Optional status filter"
+                },
+                {
+                  "key": "fromDate",
+                  "value": "",
+                  "description": "Optional start date",
+                  "disabled": true
+                },
+                {
+                  "key": "toDate",
+                  "value": "",
+                  "description": "Optional end date",
+                  "disabled": true
+                },
+                {
+                  "key": "format",
+                  "value": "json",
+                  "description": "json | csv"
+                }
+              ]
+            },
+            "description": "Generate AML alerts or SAR report. Response is marked no-store by the API.\n\n**reportKind:** alerts | sar\n**Scopes:** reporting:read"
+          }
+        },
+        {
+          "name": "Reconciliation Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reporting/reconciliation?status=OPEN&format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reporting",
+                "reconciliation"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "OPEN",
+                  "description": "Optional reconciliation status"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "Optional reconciliation type",
+                  "disabled": true
+                },
+                {
+                  "key": "fromDate",
+                  "value": "2026-05-01",
+                  "description": "Optional start date"
+                },
+                {
+                  "key": "toDate",
+                  "value": "2026-05-11",
+                  "description": "Optional end date"
+                },
+                {
+                  "key": "format",
+                  "value": "json",
+                  "description": "json | csv"
+                }
+              ]
+            },
+            "description": "Generate reconciliation report with optional status and type filters.\n\n**Scopes:** reporting:read"
+          }
+        },
+        {
+          "name": "CBN Monthly Returns",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reporting/cbn/monthly-returns?period=2026-05&format=json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reporting",
+                "cbn",
+                "monthly-returns"
+              ],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "2026-05",
+                  "description": "Optional YYYY-MM period"
+                },
+                {
+                  "key": "format",
+                  "value": "json",
+                  "description": "json | xlsx"
+                }
+              ]
+            },
+            "description": "Generate CBN monthly returns for a YYYY-MM period. Response is marked no-store by the API.\n\n**Scopes:** reporting:read"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
+            },
+            "description": "Returns the health status of the API, database, and Redis.\n\n**Auth:** None required\n\n**Response:** 200 OK with status of each dependency, or 503 if any dependency is down."
+          }
+        }
+      ]
+    },
+    {
+      "name": "AML / Compliance",
+      "description": "Compliance-only AML and SAR workflows. These endpoints must never be exposed to customer-facing clients because they can reveal internal monitoring and SAR activity.",
+      "item": [
+        {
+          "name": "List AML Alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/aml/alerts?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aml",
+                "alerts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Records per page (default: 20)"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Optional filter: OPEN | UNDER_REVIEW | CLOSED | ESCALATED",
+                  "disabled": true
+                },
+                {
+                  "key": "customerId",
+                  "value": "",
+                  "description": "Optional filter by internal customer ID",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve paginated AML alerts for compliance review. Use the optional filters to narrow by status or customer."
+          }
+        },
+        {
+          "name": "Resolve AML Alert",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/aml/alerts/1/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aml",
+                "alerts",
+                "1",
+                "resolve"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolvedBy\": \"compliance.officer@fusecore.test\",\n  \"notes\": \"Closed after review confirmed a false positive.\"\n}"
+            },
+            "description": "Close an AML alert as a false positive. Escalated alerts are immutable and cannot be resolved."
+          }
+        },
+        {
+          "name": "Escalate AML Alert",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/aml/alerts/1/escalate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aml",
+                "alerts",
+                "1",
+                "escalate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"escalatedBy\": \"compliance.manager@fusecore.test\",\n  \"notes\": \"Escalated for SAR preparation.\"\n}"
+            },
+            "description": "Escalate an alert for SAR handling. Once escalated, the alert becomes immutable."
+          }
+        },
+        {
+          "name": "Create SAR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/aml/sar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aml",
+                "sar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alertIds\": [\n    12,\n    14\n  ],\n  \"narrative\": \"Multiple linked transfers were structured just below reporting thresholds across a 24-hour period.\",\n  \"periodStart\": \"2026-04-01\",\n  \"periodEnd\": \"2026-04-22\",\n  \"createdBy\": \"compliance.officer@fusecore.test\"\n}"
+            },
+            "description": "Create a draft suspicious activity report from one or more AML alerts tied to the same customer."
+          }
+        },
+        {
+          "name": "File SAR",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/aml/sar/1/file",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aml",
+                "sar",
+                "1",
+                "file"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filedBy\": \"compliance.manager@fusecore.test\",\n  \"regulatorRef\": \"CBN-NFIU-ACK-2026-0001\"\n}"
+            },
+            "description": "Mark a draft SAR as filed and optionally record the regulator acknowledgement reference."
+          }
+        },
+        {
+          "name": "List SARs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/aml/sar?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aml",
+                "sar"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Records per page (default: 20)"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Optional filter: DRAFT | FILED | ACKNOWLEDGED",
+                  "disabled": true
+                },
+                {
+                  "key": "customerId",
+                  "value": "",
+                  "description": "Optional filter by internal customer ID",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve paginated SAR records for compliance operations."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Tenants",
+          "description": "Admin-only tenant registry and tenant API key management. These endpoints use X-Admin-API-Key, not a tenant X-API-Key.",
+          "item": [
+            {
+              "name": "Create Tenant",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/tenants",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants"
+                  ]
+                },
+                "description": "Create a tenant, create its isolated database/schema, and provision the primary tenant API key. The plaintext apiKey is returned only once; store it immediately. shortname must be lowercase alphanumeric/underscore, 3-48 chars, and start with a letter.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 201 Created — TenantResponseDto with apiKey",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Acme Microfinance\",\n  \"shortname\": \"acme_mfb\"\n}"
+                }
+              }
+            },
+            {
+              "name": "List Tenants",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/tenants",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants"
+                  ]
+                },
+                "description": "List all tenants ordered by newest first. Plaintext API keys are not returned.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 200 OK — TenantResponseDto[]"
+              }
+            },
+            {
+              "name": "Get Tenant",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/tenants/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Numeric tenant ID"
+                    }
+                  ]
+                },
+                "description": "Fetch one tenant by numeric ID.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 200 OK — TenantResponseDto"
+              }
+            },
+            {
+              "name": "Update Tenant",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/tenants/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Numeric tenant ID"
+                    }
+                  ]
+                },
+                "description": "Update tenant display name or active status. Setting isActive to false blocks tenant API key authentication.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 200 OK — TenantResponseDto",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Acme Microfinance Bank\",\n  \"isActive\": true\n}"
+                }
+              }
+            },
+            {
+              "name": "Rotate Primary Tenant Key",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/tenants/:id/rotate-key",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    ":id",
+                    "rotate-key"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Numeric tenant ID"
+                    }
+                  ]
+                },
+                "description": "Legacy primary-key rotation endpoint. Revokes active tenant keys and creates a new primary API key with wildcard scope. The plaintext apiKey is returned only once. Prefer the scoped API key endpoints for finer-grained key management.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 200 OK — TenantResponseDto with apiKey"
+              }
+            },
+            {
+              "name": "Create Tenant API Key",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/tenants/:id/api-keys",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    ":id",
+                    "api-keys"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Numeric tenant ID"
+                    }
+                  ]
+                },
+                "description": "Create a scoped tenant API key. The plaintext apiKey is returned only once. Valid scopes include *, customers:read/write, accounts:read/write, transactions:read/write, payments:read/write, ledger:read/write, charges:read/write, reconciliation:read/write, webhooks:read/write, loans:read/write, products:read/write, reporting:read, metrics:read, aml:read/write, and admin:*.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 201 Created — TenantApiKeyResponseDto with apiKey",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Back-office integration\",\n  \"scopes\": [\n    \"customers:read\",\n    \"accounts:read\",\n    \"transactions:write\"\n  ],\n  \"allowedIps\": [\n    \"203.0.113.10\"\n  ],\n  \"expiresAt\": \"2027-05-11T00:00:00.000Z\",\n  \"metadata\": {\n    \"owner\": \"operations\"\n  }\n}"
+                }
+              }
+            },
+            {
+              "name": "List Tenant API Keys",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/tenants/:id/api-keys",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    ":id",
+                    "api-keys"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Numeric tenant ID"
+                    }
+                  ]
+                },
+                "description": "List API keys for a tenant ordered by newest first. Plaintext API keys are not returned.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 200 OK — TenantApiKeyResponseDto[]"
+              }
+            },
+            {
+              "name": "Revoke Tenant API Key",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/tenants/:id/api-keys/:keyId/revoke",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    ":id",
+                    "api-keys",
+                    ":keyId",
+                    "revoke"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Numeric tenant ID"
+                    },
+                    {
+                      "key": "keyId",
+                      "value": "1",
+                      "description": "Numeric tenant API key ID"
+                    }
+                  ]
+                },
+                "description": "Revoke a tenant API key immediately. Revoked keys can no longer authenticate tenant requests.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 200 OK — TenantApiKeyResponseDto"
+              }
+            },
+            {
+              "name": "Rotate Tenant API Key",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/tenants/:id/api-keys/:keyId/rotate",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    ":id",
+                    "api-keys",
+                    ":keyId",
+                    "rotate"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Numeric tenant ID"
+                    },
+                    {
+                      "key": "keyId",
+                      "value": "1",
+                      "description": "Numeric tenant API key ID"
+                    }
+                  ]
+                },
+                "description": "Revoke an existing tenant API key and create a replacement preserving the key name, scopes, allowed IPs, expiry, and metadata. The new plaintext apiKey is returned only once.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 200 OK — TenantApiKeyResponseDto with apiKey"
+              }
+            },
+            {
+              "name": "Update Tenant API Key Scopes",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/tenants/:id/api-keys/:keyId/scopes",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    ":id",
+                    "api-keys",
+                    ":keyId",
+                    "scopes"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Numeric tenant ID"
+                    },
+                    {
+                      "key": "keyId",
+                      "value": "1",
+                      "description": "Numeric tenant API key ID"
+                    }
+                  ]
+                },
+                "description": "Replace the scopes on a tenant API key. scopes must be a non-empty array of valid API scope strings.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 200 OK — TenantApiKeyResponseDto",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"scopes\": [\n    \"customers:read\",\n    \"accounts:read\",\n    \"transactions:read\"\n  ]\n}"
+                }
+              }
+            },
+            {
+              "name": "Update Tenant API Key Allowed IPs",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/tenants/:id/api-keys/:keyId/allowed-ips",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "tenants",
+                    ":id",
+                    "api-keys",
+                    ":keyId",
+                    "allowed-ips"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Numeric tenant ID"
+                    },
+                    {
+                      "key": "keyId",
+                      "value": "1",
+                      "description": "Numeric tenant API key ID"
+                    }
+                  ]
+                },
+                "description": "Replace the allowed IP list on a tenant API key. Use an empty array to allow requests from any IP.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 200 OK — TenantApiKeyResponseDto",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"allowedIps\": [\n    \"203.0.113.10\",\n    \"203.0.113.11\"\n  ]\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Migrations",
+          "item": [
+            {
+              "name": "Run Admin DB Migration",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/migrations/admin",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "migrations",
+                    "admin"
+                  ]
+                },
+                "description": "Triggers pending migrations on the admin database (fusecore_admin — the tenants registry).\n\nThe migration runs asynchronously. While it is in progress, all /admin/tenants/* requests return **503 Service Unavailable**. Poll the status endpoint to know when the migration is complete.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 202 Accepted — {message, status: \"running\"}"
+              }
+            },
+            {
+              "name": "Get Admin DB Migration Status",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/migrations/admin/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "migrations",
+                    "admin",
+                    "status"
+                  ]
+                },
+                "description": "Returns the current status of the most recent admin DB migration run.\n\n**Statuses:** idle | running | completed | failed\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 200 OK — {status, startedAt?, completedAt?, migrationsRan?: string[], error?}"
+              }
+            },
+            {
+              "name": "Run Tenant DB Migration",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/migrations/tenant/:tenantId",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "migrations",
+                    "tenant",
+                    ":tenantId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "tenantId",
+                      "value": "1",
+                      "description": "Numeric tenant ID"
+                    }
+                  ]
+                },
+                "description": "Runs all pending TENANT_MIGRATIONS against the specified tenant database. TypeORM tracks applied migrations per-tenant in each database's `migrations` table — only unapplied migrations are run.\n\nThe migration runs asynchronously. While it is in progress, all API requests authenticated with that tenant's API key return **503 Service Unavailable**. Poll the status endpoint to know when the migration is complete.\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 202 Accepted — {message, status: \"running\"}"
+              }
+            },
+            {
+              "name": "Get Tenant DB Migration Status",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "X-Admin-API-Key",
+                    "value": "{{adminApiKey}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/migrations/tenant/:tenantId/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "migrations",
+                    "tenant",
+                    ":tenantId",
+                    "status"
+                  ],
+                  "variable": [
+                    {
+                      "key": "tenantId",
+                      "value": "1",
+                      "description": "Numeric tenant ID"
+                    }
+                  ]
+                },
+                "description": "Returns the current status of the most recent migration run for the specified tenant database.\n\n**Statuses:** idle | running | completed | failed\n\n**Auth:** X-Admin-API-Key header\n\n**Response:** 200 OK — {status, startedAt?, completedAt?, migrationsRan?: string[], error?}"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Administrative operations protected by X-Admin-API-Key."
+    },
+    {
+      "name": "Webhooks",
+      "description": "Tenant webhook subscriptions, delivery logs, and manual replay.",
+      "item": [
+        {
+          "name": "Create Webhook Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/webhooks/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "subscriptions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Core events listener\",\n  \"endpointUrl\": \"https://example.com/fusecore/webhooks\",\n  \"eventTypes\": [\n    \"transaction.completed\",\n    \"loan.disbursed\"\n  ],\n  \"filters\": {\n    \"payload\": {\n      \"currency\": \"NGN\"\n    }\n  },\n  \"payloadVersion\": \"2026-05-06\",\n  \"maxAttempts\": 5,\n  \"backoffBaseMs\": 2000\n}"
+            },
+            "description": "Create a tenant webhook subscription. If signingSecret is omitted, FuseCore generates one and returns it in the response."
+          }
+        },
+        {
+          "name": "List Webhook Subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/webhooks/subscriptions?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "List webhook subscriptions. Optional status filter: ACTIVE or INACTIVE."
+          }
+        },
+        {
+          "name": "Get Webhook Subscription",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/webhooks/subscriptions/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "subscriptions",
+                "1"
+              ]
+            },
+            "description": "Fetch one webhook subscription by id."
+          }
+        },
+        {
+          "name": "Update Webhook Subscription",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/webhooks/subscriptions/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "subscriptions",
+                "1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\",\n  \"eventTypes\": [\n    \"transaction.completed\"\n  ]\n}"
+            },
+            "description": "Update endpoint URL, event filters, payload version, retry policy, signing secret, or status."
+          }
+        },
+        {
+          "name": "List Webhook Deliveries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/webhooks/deliveries?page=1&limit=20&status=FAILED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "deliveries"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "FAILED"
+                }
+              ]
+            },
+            "description": "List delivery logs. Filters: status, eventId, subscriptionRef."
+          }
+        },
+        {
+          "name": "Get Webhook Delivery",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/webhooks/deliveries/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "deliveries",
+                "1"
+              ]
+            },
+            "description": "Inspect one delivery attempt log."
+          }
+        },
+        {
+          "name": "Replay Webhook Delivery",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/webhooks/deliveries/1/replay",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "deliveries",
+                "1",
+                "replay"
+              ]
+            },
+            "description": "Reset a failed/dead-letter delivery to PENDING for dispatcher retry."
+          }
+        }
+      ]
+    }
+  ]
+}
