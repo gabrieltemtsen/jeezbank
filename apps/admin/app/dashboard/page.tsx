@@ -161,7 +161,6 @@ export default async function DashboardPage() {
               { label: "Customers", href: "/customers", icon: "users" },
               { label: "Transactions", href: "/transactions", icon: "tx" },
               { label: "Loans", href: "/loans", icon: "bank" },
-              { label: "AML Queue", href: "/aml", icon: "alert" },
             ].map((a) => (
               <Link key={a.label} href={a.href}
                     className="jmb-glass-hi rounded-2xl p-4 flex flex-col items-start gap-3 hover:bg-white/10 transition">

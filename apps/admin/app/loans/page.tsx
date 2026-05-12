@@ -1,24 +1,35 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getAdminSession } from "@/lib/auth";
 import { getLoans, unwrapList, extractError } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
+import Pagination from "@/components/Pagination";
 import DataError from "@/components/DataError";
-import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function LoansPage() {
+export default async function LoansPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const session = await getAdminSession();
   if (!session) redirect("/login");
 
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp.page || "1"));
+  const limit = 20;
+
   let loans: Record<string, unknown>[] = [];
+  let total = 0;
   let fetchError: string | null = null;
   try {
-    const raw = await getLoans({ limit: 50, page: 1 });
-    const { items } = unwrapList<Record<string, unknown>>(raw);
+    const raw = await getLoans({ limit, page });
+    const { items, total: t } = unwrapList<Record<string, unknown>>(raw);
     loans = items;
+    total = t;
   } catch (err) {
     fetchError = extractError(err);
     console.error("[loans] fetch failed:", fetchError);
@@ -38,7 +49,7 @@ export default async function LoansPage() {
     <Shell role={session.role} name={session.name}>
       <PageHeader
         title="Loans"
-        subtitle={`${loans.length} loans · portfolio value ₦${(portfolio / 100).toLocaleString()}`}
+        subtitle={`${total.toLocaleString()} loan${total === 1 ? "" : "s"} · portfolio value ₦${(portfolio / 100).toLocaleString()}`}
         actions={<button className="jmb-btn jmb-btn-sm">New facility</button>}
       />
 
@@ -59,9 +70,11 @@ export default async function LoansPage() {
             </thead>
             <tbody>
               {loans.length === 0 ? (
-                <tr><td colSpan={6} className="text-center text-[var(--jmb-text-mute)] py-12">
-                  {fetchError ? "Couldn't load loans (see error above)" : "No loans found"}
-                </td></tr>
+                <tr>
+                  <td colSpan={6} className="text-center text-[var(--jmb-text-mute)] py-12">
+                    {fetchError ? "Couldn't load loans (see error above)" : "No loans found"}
+                  </td>
+                </tr>
               ) : (
                 loans.map((loan, i) => (
                   <tr key={i}>
@@ -89,6 +102,8 @@ export default async function LoansPage() {
           </table>
         </div>
       </div>
+
+      <Pagination basePath="/loans" page={page} pageSize={limit} total={total} />
     </Shell>
   );
 }

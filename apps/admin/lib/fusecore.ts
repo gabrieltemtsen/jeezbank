@@ -113,6 +113,53 @@ export async function getCustomerRelatedParties(id: string) {
   return res.data;
 }
 
+export type CustomerType = "INDIVIDUAL" | "CORPORATE" | string;
+
+export type CreateCustomerInput = {
+  type?: CustomerType;
+  // We intentionally keep this loose because FuseCore supports many fields
+  // depending on customer type + KYC.
+  [key: string]: any;
+};
+
+export async function createCustomer(data: CreateCustomerInput) {
+  const res = await fusecore.post(`/customers`, data);
+  return res.data;
+}
+
+export async function updateCustomer(id: string, data: Record<string, any>) {
+  const res = await fusecore.put(`/customers/${id}`, data);
+  return res.data;
+}
+
+export async function updateCustomerStatus(id: string, data: { status: string; updatedBy?: string; reason?: string }) {
+  const res = await fusecore.patch(`/customers/${id}/status`, data);
+  return res.data;
+}
+
+export async function updateCustomerKycLevel(id: string, data: { level: number; updatedBy?: string }) {
+  const res = await fusecore.patch(`/customers/${id}/kyc`, data);
+  return res.data;
+}
+
+export async function addCustomerDocument(
+  id: string,
+  data: { type: string; url?: string; filename?: string; meta?: Record<string, any> }
+) {
+  const res = await fusecore.post(`/customers/${id}/documents`, data);
+  return res.data;
+}
+
+export async function getCustomerByCustomerNumber(customerNumber: string) {
+  const res = await fusecore.get(`/customers/no/${customerNumber}`);
+  return res.data;
+}
+
+export async function searchCustomer(params: { bvn?: string; phone?: string; email?: string; customerNumber?: string }) {
+  const res = await fusecore.get(`/customers/search`, { params });
+  return res.data;
+}
+
 // ── Accounts ───────────────────────────────────────────────────────
 export async function getAccounts(params?: {
   page?: number;
@@ -166,6 +213,50 @@ export async function getAccountBeneficiaries(id: number) {
   return res.data;
 }
 
+export type OpenAccountInput = {
+  customerId: number;
+  productId?: number;
+  type?: string;
+  currency?: string;
+  // plus other fields depending on product
+  [key: string]: any;
+};
+
+export async function openAccount(data: OpenAccountInput) {
+  const res = await fusecore.post(`/accounts`, data);
+  return res.data;
+}
+
+export async function searchAccounts(params: { accountNumber?: string; customerId?: number; status?: string }) {
+  const res = await fusecore.get(`/accounts/search`, { params });
+  return res.data;
+}
+
+export async function updateAccount(id: string, data: Record<string, any>) {
+  const res = await fusecore.put(`/accounts/${id}`, data);
+  return res.data;
+}
+
+export async function updateAccountStatus(id: string, data: { status: string; updatedBy?: string; reason?: string }) {
+  const res = await fusecore.patch(`/accounts/${id}/status`, data);
+  return res.data;
+}
+
+export async function placeLien(id: string, data: { amount: number; reason?: string; placedBy?: string }) {
+  const res = await fusecore.post(`/accounts/${id}/lien`, data);
+  return res.data;
+}
+
+export async function releaseLien(id: string) {
+  const res = await fusecore.delete(`/accounts/${id}/lien`);
+  return res.data;
+}
+
+export async function closeFixedDeposit(id: string, data: { closedBy?: string; reason?: string }) {
+  const res = await fusecore.post(`/accounts/${id}/close-fixed-deposit`, data);
+  return res.data;
+}
+
 // ── Transactions ───────────────────────────────────────────────────
 export async function getTransactions(params?: {
   page?: number;
@@ -194,6 +285,48 @@ export async function getTransactionReceipt(id: string) {
   return res.data;
 }
 
+export type InternalTransferInput = {
+  fromAccountNumber: string;
+  toAccountNumber: string;
+  amount: number;
+  narration?: string;
+  initiatedBy?: string;
+  [key: string]: any;
+};
+
+export async function internalTransfer(data: InternalTransferInput) {
+  const res = await fusecore.post(`/transactions/transfer`, data);
+  return res.data;
+}
+
+export type DebitAccountInput = {
+  accountNumber: string;
+  amount: number;
+  narration?: string;
+  reference?: string;
+  initiatedBy?: string;
+  [key: string]: any;
+};
+
+export async function debitAccount(data: DebitAccountInput) {
+  const res = await fusecore.post(`/transactions/debit`, data);
+  return res.data;
+}
+
+export type CreditAccountInput = {
+  accountNumber: string;
+  amount: number;
+  narration?: string;
+  reference?: string;
+  initiatedBy?: string;
+  [key: string]: any;
+};
+
+export async function creditAccount(data: CreditAccountInput) {
+  const res = await fusecore.post(`/transactions/credit`, data);
+  return res.data;
+}
+
 // ── Loans ──────────────────────────────────────────────────────────
 export async function getLoans(params?: {
   page?: number;
@@ -208,6 +341,26 @@ export async function getLoans(params?: {
 
 export async function getLoan(id: string) {
   const res = await fusecore.get(`/loans/${id}`);
+  return res.data;
+}
+
+export async function getLoanByReference(ref: string) {
+  const res = await fusecore.get(`/loans/ref/${ref}`);
+  return res.data;
+}
+
+export async function getLoanRepaymentSchedule(id: string) {
+  const res = await fusecore.get(`/loans/${id}/schedule`);
+  return res.data;
+}
+
+// Back-compat alias used by some pages
+export async function getLoanSchedule(id: string) {
+  return getLoanRepaymentSchedule(id);
+}
+
+export async function getLoanRepayments(id: string, params?: { page?: number; limit?: number }) {
+  const res = await fusecore.get(`/loans/${id}/repayments`, { params });
   return res.data;
 }
 
@@ -231,6 +384,25 @@ export async function repayLoan(id: string, data: { amount: number; paidBy: stri
   return res.data;
 }
 
+
+export async function getLoanCollateral(id: string) {
+  const res = await fusecore.get(`/loans/${id}/collateral`);
+  return res.data;
+}
+
+export async function addLoanCollateral(
+  id: string,
+  data: { type: string; value: number; description?: string; reference?: string }
+) {
+  const res = await fusecore.post(`/loans/${id}/collateral`, data);
+  return res.data;
+}
+
+export async function getLoanRestructures(id: string) {
+  const res = await fusecore.get(`/loans/${id}/restructures`);
+  return res.data;
+}
+
 export async function forecloseLoan(id: string, data: { foreclosedBy: string; notes?: string }) {
   const res = await fusecore.patch(`/loans/${id}/foreclose`, data);
   return res.data;
@@ -238,6 +410,21 @@ export async function forecloseLoan(id: string, data: { foreclosedBy: string; no
 
 export async function recoverLoan(id: string, data: { recoveredBy: string; amount: number; notes?: string }) {
   const res = await fusecore.post(`/loans/${id}/recover`, data);
+  return res.data;
+}
+
+export async function writeOffLoan(id: string, data: { writtenOffBy: string; reason: string; notes?: string }) {
+  const res = await fusecore.patch(`/loans/${id}/write-off`, data);
+  return res.data;
+}
+
+export async function undoWriteOffLoan(id: string, data: { undoneBy: string; notes?: string }) {
+  const res = await fusecore.patch(`/loans/${id}/undo-write-off`, data);
+  return res.data;
+}
+
+export async function waiveLoanInterest(id: string, data: { waivedBy: string; amount?: number; notes?: string }) {
+  const res = await fusecore.patch(`/loans/${id}/waive-interest`, data);
   return res.data;
 }
 

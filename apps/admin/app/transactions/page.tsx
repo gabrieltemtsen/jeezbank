@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getAdminSession } from "@/lib/auth";
 import { getTransactions, unwrapList, extractError } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
@@ -109,7 +110,9 @@ export default async function TransactionsPage({
                   return (
                     <tr key={i}>
                       <td className="font-mono text-xs text-[var(--jmb-text-dim)]">
-                        <a className="hover:underline" href={`/transactions/${tx.id}`}>{String(tx.reference || tx.id || "").slice(0, 16)}…</a>
+                        <Link className="hover:underline" href={`/transactions/${tx.id}`}>
+                          {String(tx.reference || tx.id || "").slice(0, 16)}…
+                        </Link>
                       </td>
                       <td>
                         <span className={`jmb-pill ${isCredit ? "jmb-pill-green" : "jmb-pill-red"}`}>

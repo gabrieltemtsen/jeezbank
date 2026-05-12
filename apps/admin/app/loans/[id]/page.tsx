@@ -1,9 +1,19 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
-import { getLoan, extractError } from "@/lib/fusecore";
+import {
+  getLoan,
+  extractError,
+  getLoanRepayments,
+  getLoanSchedule,
+  getLoanCollateral,
+  getLoanRestructures,
+  unwrapList,
+} from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import DataError from "@/components/DataError";
 import LoanActionPanel from "@/components/LoanActionPanel";
+import LoanRepayPanel from "@/components/LoanRepayPanel";
+import LoanCollateralPanel from "@/components/LoanCollateralPanel";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -16,9 +26,29 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
   const { id } = await params;
   let loan: Record<string, any> | null = null;
   let fetchError: string | null = null;
+
+  // Secondary panels are optional (demo-friendly): a failure there shouldn't
+  // kill the entire page.
+  let repaymentsRaw: any = null;
+  let scheduleRaw: any = null;
+  let collateralRaw: any = null;
+  let restructuresRaw: any = null;
+
   try {
     const data = await getLoan(id);
     loan = data.data || data;
+
+    const [repayments, schedule, collateral, restructures] = await Promise.all([
+      getLoanRepayments(id).catch((e) => ({ __error: extractError(e) })),
+      getLoanSchedule(id).catch((e) => ({ __error: extractError(e) })),
+      getLoanCollateral(id).catch((e) => ({ __error: extractError(e) })),
+      getLoanRestructures(id).catch((e) => ({ __error: extractError(e) })),
+    ]);
+
+    repaymentsRaw = repayments;
+    scheduleRaw = schedule;
+    collateralRaw = collateral;
+    restructuresRaw = restructures;
   } catch (err) {
     fetchError = extractError(err);
   }
@@ -73,11 +103,32 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
           </section>
 
           {session.role === "MANAGER" && (
-            <section className="jmb-glass rounded-3xl p-6">
-              <h3 className="text-sm font-semibold text-white mb-4">Actions</h3>
-              <LoanActionPanel loanId={String(loan.id)} status={String(loan.status)} />
+            <section className="space-y-4">
+              <div className="jmb-glass rounded-3xl p-6">
+                <h3 className="text-sm font-semibold text-white mb-4">Actions</h3>
+                <LoanActionPanel loanId={String(loan.id)} status={String(loan.status)} />
+              </div>
+
+              {(status === "DISBURSED" || status === "DEFAULTED") && (
+                <div className="jmb-glass rounded-3xl p-6">
+                  <h3 className="text-sm font-semibold text-white mb-4">Post repayment</h3>
+                  <LoanRepayPanel loanId={String(loan.id)} />
+                </div>
+              )}
+
+              <div className="jmb-glass rounded-3xl p-6">
+                <h3 className="text-sm font-semibold text-white mb-4">Add collateral</h3>
+                <LoanCollateralPanel loanId={String(loan.id)} />
+              </div>
             </section>
           )}
+
+          <section className="lg:col-span-3 grid grid-cols-1 lg:grid-cols-2 gap-5 mt-2">
+            <Panel title="Repayments" subtitle="GET /loans/:id/repayments" raw={repaymentsRaw} />
+            <Panel title="Schedule" subtitle="GET /loans/:id/schedule" raw={scheduleRaw} />
+            <Panel title="Collateral" subtitle="GET /loans/:id/collateral" raw={collateralRaw} />
+            <Panel title="Restructure history" subtitle="GET /loans/:id/restructures" raw={restructuresRaw} />
+          </section>
         </div>
       )}
     </Shell>
@@ -91,6 +142,32 @@ function Field({ label, value, mono, accent }: { label: string; value: string; m
       <p className={`text-sm font-medium mt-1 ${accent ? "jmb-grad-text text-lg font-bold" : "text-white"} ${mono ? "font-mono" : ""}`}>
         {value}
       </p>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  subtitle,
+  raw,
+}: {
+  title: string;
+  subtitle: string;
+  raw: any;
+}) {
+  const error = raw && typeof raw === "object" && "__error" in raw ? String((raw as any).__error) : null;
+  return (
+    <div className="jmb-glass rounded-3xl p-6">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-white">{title}</h3>
+          <p className="text-[11px] text-[var(--jmb-text-mute)] mt-0.5 font-mono">{subtitle}</p>
+        </div>
+      </div>
+      <DataError title={`Couldn't load ${title.toLowerCase()}`} message={error} />
+      <pre className="mt-2 text-[11px] text-[var(--jmb-text-dim)] overflow-auto max-h-64 rounded-xl p-3 jmb-glass-hi font-mono leading-relaxed">
+        {raw ? JSON.stringify(raw, null, 2) : "—"}
+      </pre>
     </div>
   );
 }
