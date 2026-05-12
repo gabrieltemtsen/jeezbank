@@ -1,9 +1,12 @@
 import axios from "axios";
 
+const TENANT_ID = process.env.FUSECORE_TENANT_ID;
+
 const fusecore = axios.create({
   baseURL: process.env.FUSECORE_BASE_URL || "http://localhost:3000/api/v1",
   headers: {
     "X-API-Key": process.env.FUSECORE_API_KEY || "",
+    "X-Tenant-Id": TENANT_ID ?? "",
     "Content-Type": "application/json",
   },
   timeout: 10000,
