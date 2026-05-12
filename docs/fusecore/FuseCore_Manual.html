@@ -1,0 +1,3360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FuseCore — Developer Manual</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222639;
+    --border: #2e3347;
+    --text: #e2e4ed;
+    --muted: #8b90a8;
+    --accent: #6c6fef;
+    --accent2: #4fc1a6;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --success: #22c55e;
+    --info: #3b82f6;
+    --code-bg: #13151f;
+    --sidebar-w: 260px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.7;
+    display: flex;
+  }
+
+  /* ── Sidebar ── */
+  nav {
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: fixed;
+    top: 0; left: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    z-index: 100;
+  }
+
+  nav::-webkit-scrollbar { width: 8px; }
+  nav::-webkit-scrollbar-track { background: var(--surface); }
+  nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+  nav::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  nav .logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  nav .logo h1 { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+  nav .logo span { font-size: 11px; color: var(--muted); }
+
+  nav a {
+    display: block;
+    padding: 7px 20px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+  nav a:hover { color: var(--text); background: var(--surface2); }
+  nav a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(108,111,239,0.08); }
+  nav .nav-group { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; padding: 16px 20px 6px; }
+
+  /* ── Main ── */
+  main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 0;
+  }
+
+  /* Cover */
+  .cover {
+    background: linear-gradient(135deg, #0d1126 0%, #161b36 50%, #0f1117 100%);
+    padding: 80px 60px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(108,111,239,0.12) 0%, transparent 70%);
+    top: -200px; right: -100px;
+    pointer-events: none;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: rgba(108,111,239,0.15);
+    border: 1px solid rgba(108,111,239,0.3);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+  .cover h1 { font-size: 48px; font-weight: 700; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 16px; }
+  .cover h1 span { color: var(--accent); }
+  .cover p { font-size: 16px; color: var(--muted); max-width: 600px; margin-bottom: 32px; }
+  .cover .meta { display: flex; gap: 24px; flex-wrap: wrap; }
+  .cover .meta-item { font-size: 12px; }
+  .cover .meta-item strong { color: var(--text); display: block; }
+  .cover .meta-item span { color: var(--muted); }
+
+  /* Content */
+  .content { padding: 60px; max-width: 1000px; }
+
+  section { margin-bottom: 64px; }
+  section:target { scroll-margin-top: 24px; }
+
+  h2 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  h2 .icon { margin-right: 10px; opacity: 0.8; }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 28px 0 10px;
+  }
+
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 20px 0 8px;
+  }
+
+  p { color: var(--muted); margin-bottom: 12px; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .card h3 { margin-top: 0; font-size: 14px; }
+  .card p { margin: 0; font-size: 13px; }
+
+  /* Callouts */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13px;
+    border-left: 3px solid;
+  }
+  .callout.warn { background: rgba(245,158,11,0.08); border-color: var(--warn); color: #fcd34d; }
+  .callout.danger { background: rgba(239,68,68,0.08); border-color: var(--danger); color: #fca5a5; }
+  .callout.info { background: rgba(59,130,246,0.08); border-color: var(--info); color: #93c5fd; }
+  .callout.success { background: rgba(34,197,94,0.08); border-color: var(--success); color: #86efac; }
+  .callout strong { display: block; margin-bottom: 4px; font-weight: 600; }
+
+  /* Code */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 12px 0 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #c9d1d9;
+  }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #a5d6ff;
+  }
+  pre code { background: none; border: none; padding: 0; color: inherit; }
+
+  /* Syntax highlight classes */
+  .kw { color: #ff7b72; }
+  .str { color: #a5d6ff; }
+  .cm { color: #6e7681; font-style: italic; }
+  .fn { color: #d2a8ff; }
+  .num { color: #79c0ff; }
+  .type { color: #ffa657; }
+  .prop { color: #79c0ff; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 12px 0 24px; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: var(--surface2); color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* HTTP method badges */
+  .method {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+  .method.GET { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .method.POST { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .method.PATCH { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .method.DELETE { background: rgba(239,68,68,0.15); color: #f87171; }
+
+  /* Status chips */
+  .chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin: 2px;
+  }
+  .chip.blue { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .chip.green { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .chip.yellow { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .chip.red { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .chip.purple { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+  .chip.gray { background: rgba(107,114,128,0.15); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+
+  /* Endpoint blocks */
+  .endpoint {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .endpoint-path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .endpoint-desc { color: var(--muted); font-size: 13px; margin-left: auto; }
+  .endpoint-body { padding: 16px 20px; background: var(--code-bg); }
+  .endpoint-body p { margin: 0 0 8px; font-size: 13px; }
+
+  /* State machine */
+  .state-flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .state-flow .arrow { color: var(--muted); font-size: 16px; }
+
+  /* Queue table */
+  .queue-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  .queue-card .q-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+    font-weight: 600;
+    min-width: 180px;
+  }
+  .queue-card .q-jobs { font-size: 12px; color: var(--muted); }
+  .queue-card .q-jobs strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 13px; }
+
+  /* Divider */
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* Print */
+  @media print {
+    nav { display: none; }
+    main { margin-left: 0; }
+    .cover { padding: 40px; }
+    .content { padding: 40px; max-width: 100%; }
+    pre { white-space: pre-wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
+<nav>
+  <div class="logo">
+    <h1>FuseCore</h1>
+    <span>Developer Manual v2.0</span>
+  </div>
+
+  <div class="nav-group">Overview</div>
+  <a href="#overview">Introduction</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#setup">Local Setup</a>
+  <a href="#env">Environment Variables</a>
+  <a href="#commands">Commands</a>
+
+  <div class="nav-group">API Reference</div>
+  <a href="#auth">Authentication</a>
+  <a href="#response">Response Format</a>
+  <a href="#api-governance">API Governance</a>
+  <a href="#tenants">Tenants</a>
+  <a href="#customers">Customers</a>
+  <a href="#accounts">Accounts</a>
+  <a href="#transactions">Transactions</a>
+  <a href="#payments">Payments</a>
+  <a href="#loans">Loans</a>
+  <a href="#charges">Charges &amp; Taxes</a>
+  <a href="#reconciliation">Reconciliation</a>
+  <a href="#webhooks">Webhooks</a>
+  <a href="#ledger">Ledger</a>
+  <a href="#products">Products</a>
+  <a href="#reporting">Reporting</a>
+  <a href="#observability">Observability</a>
+  <a href="#aml">AML / Compliance</a>
+  <a href="#health">Health</a>
+
+  <div class="nav-group">Internals</div>
+  <a href="#multitenancy">Multi-Tenancy</a>
+  <a href="#security">Security</a>
+  <a href="#outbox">Durable Outbox</a>
+  <a href="#queues">Queues &amp; Workers</a>
+  <a href="#caching">Caching</a>
+  <a href="#pii">PII Encryption</a>
+  <a href="#financial">Financial Integrity</a>
+  <a href="#migrations">Migrations</a>
+  <a href="#testing">Testing</a>
+  <a href="#enums">Enums Reference</a>
+</nav>
+
+<!-- ═══════════════════════════ MAIN ═══════════════════════════ -->
+<main>
+
+<!-- Cover -->
+<div class="cover">
+  <div class="badge">B2B Core Banking API</div>
+  <h1>Fuse<span>Core</span><br>Developer Manual</h1>
+  <p>A fintech-grade, multi-tenant core banking engine. NestJS monorepo powering account management, lending, payments, double-entry ledger, AML screening, and automated reporting.</p>
+  <div class="meta">
+    <div class="meta-item"><strong>Version</strong><span>2.0</span></div>
+    <div class="meta-item"><strong>Stack</strong><span>NestJS 10 · TypeORM 0.3 · MySQL · BullMQ · Redis</span></div>
+    <div class="meta-item"><strong>Auth</strong><span>API Key (X-API-Key)</span></div>
+    <div class="meta-item"><strong>Base URL</strong><span>/api/v1</span></div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══════════ OVERVIEW ═══════════ -->
+<section id="overview">
+  <h2><span class="icon">◈</span>Introduction</h2>
+  <p>FuseCore is a <strong>B2B core banking API</strong>. It is never called directly by end-users or browsers — it is consumed exclusively by other backend services inside a secure network. Every request must carry a valid API key; optionally, calls are further restricted by IP allowlist.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3>Multi-Tenant</h3>
+      <p>Each tenant gets an isolated MySQL database. All operations are scoped to the calling tenant — no data bleeds across tenants.</p>
+    </div>
+    <div class="card">
+      <h3>Double-Entry Ledger</h3>
+      <p>Every financial movement posts balanced GL entries. The ledger is the source of truth for all money positions.</p>
+    </div>
+    <div class="card">
+      <h3>Loan Lifecycle</h3>
+      <p>Full lifecycle: application → approval → disbursement → repayment → closure, with write-off, waiver, recovery, and foreclosure paths.</p>
+    </div>
+    <div class="card">
+      <h3>PII Encryption</h3>
+      <p>BVN, NIN, email, phone encrypted at rest with AES-256-GCM. Searchable via HMAC-SHA256 blind indexes.</p>
+    </div>
+    <div class="card">
+      <h3>AML Engine</h3>
+      <p>6-rule AML screening on every transaction. Triggered rules create an alert routed to the compliance review queue.</p>
+    </div>
+    <div class="card">
+      <h3>Async Workers</h3>
+      <p>8 BullMQ queues handle notifications, audit logging, reporting, reconciliation, outbox dispatch, loan processing, and AML checks.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ ARCHITECTURE ═══════════ -->
+<section id="architecture">
+  <h2><span class="icon">◈</span>Architecture</h2>
+
+  <h3>Monorepo Layout</h3>
+  <pre>fuseCore/
+├── apps/
+│   ├── api/          # HTTP API server (NestJS)
+│   └── worker/       # BullMQ background job processor
+├── libs/
+│   └── shared/
+│       └── src/
+│           ├── modules/         # Business domains
+│           │   ├── auth/        # API key validation
+│           │   ├── accounts/    # Account management
+│           │   ├── customer/    # Customer KYC
+│           │   ├── transactions/ # Debit / Credit / Transfer
+│           │   ├── payments/    # Outbound payments
+│           │   ├── loans/       # Loan lifecycle
+│           │   ├── ledger/      # Double-entry GL
+│           │   ├── products/    # Product catalog
+│           │   └── audit/       # Audit log processor
+│           ├── common/          # Enums, guards, interceptors, pipes
+│           ├── database/        # TypeORM entities, migrations, providers
+│           └── system-modules/  # Redis, BullMQ, cache infrastructure
+├── docs/
+│   └── fusecore.postman_collection.json
+└── dataSourceConfig.ts          # TypeORM CLI data source</pre>
+
+  <h3>Request Lifecycle</h3>
+  <pre>Client → X-API-Key header → ApiKeyGuard (global)
+       → IP allowlist check (optional)
+       → RedlockInterceptor (serializes concurrent writes per API client)
+       → CacheInterceptor (GET responses cached in Redis)
+       → Controller → Service → Repository → MySQL
+                                    ↓
+                            BullMQ Queues (audit, notifications, AML, reporting)</pre>
+
+  <h3>Domain Modules</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Module</th><th>Path</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td>Accounts</td><td><code>modules/accounts</code></td><td>Create, fund, freeze, close, lien management</td></tr>
+        <tr><td>Customer</td><td><code>modules/customer</code></td><td>KYC onboarding, PII storage, tier management</td></tr>
+        <tr><td>Transactions</td><td><code>modules/transactions</code></td><td>Atomic debit / credit / transfer with idempotency</td></tr>
+        <tr><td>Payments</td><td><code>modules/payments</code></td><td>Outbound payment initiation and status tracking</td></tr>
+        <tr><td>Loans</td><td><code>modules/loans</code></td><td>Full lending lifecycle, repayment schedules, write-off</td></tr>
+        <tr><td>Charges</td><td><code>modules/charges</code></td><td>Configurable fees, VAT, WHT, stamp duty, waivers, exemptions, and reversals</td></tr>
+        <tr><td>Reconciliation</td><td><code>modules/reconciliation</code></td><td>Persisted reconciliation runs and operational exception management</td></tr>
+        <tr><td>Webhooks</td><td><code>modules/webhooks</code></td><td>B2B webhook subscriptions, signed delivery logs, retries, dead-letter, and replay</td></tr>
+        <tr><td>Ledger</td><td><code>modules/ledger</code></td><td>Double-entry GL accounts, trial balance</td></tr>
+        <tr><td>Products</td><td><code>modules/products</code></td><td>Account and loan product catalog</td></tr>
+        <tr><td>Audit</td><td><code>modules/audit</code></td><td>Immutable audit log writer (queue consumer)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════ SETUP ═══════════ -->
+<section id="setup">
+  <h2><span class="icon">◈</span>Local Setup</h2>
+
+  <h3>Prerequisites</h3>
+  <ul style="color:var(--muted);padding-left:20px;margin-bottom:16px;line-height:2">
+    <li>Node.js ≥ 18, Yarn 1 (never npm or pnpm)</li>
+    <li>MySQL 8.x — one database for the management plane, isolated databases per tenant</li>
+    <li>Redis 7.x — shared by cache and BullMQ</li>
+  </ul>
+
+  <h3>First-Time Setup</h3>
+  <pre><span class="cm"># 1. Install dependencies</span>
+yarn install
+
+<span class="cm"># 2. Copy env template and fill in values</span>
+cp .env.example .env
+
+<span class="cm"># 3. Run migrations (management DB)</span>
+yarn db:migration:run
+
+<span class="cm"># 4. Start API and worker</span>
+yarn start:dev
+yarn start:worker:dev</pre>
+
+  <div class="callout warn">
+    <strong>Never use DB_SYNCHRONIZE=true in production.</strong>
+    All schema changes must go through TypeORM migrations. Synchronize mode is only acceptable against a local throw-away database.
+  </div>
+</section>
+
+<!-- ═══════════ ENV ═══════════ -->
+<section id="env">
+  <h2><span class="icon">◈</span>Environment Variables</h2>
+  <p>All config is read via <code>ConfigService.get()</code> — never access <code>process.env</code> directly in application code.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Variable</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>DB_HOST</code></td><td><span class="chip red">Yes</span></td><td>MySQL host</td></tr>
+        <tr><td><code>DB_PORT</code></td><td><span class="chip red">Yes</span></td><td>MySQL port (default 3306)</td></tr>
+        <tr><td><code>DB_USERNAME</code></td><td><span class="chip red">Yes</span></td><td>MySQL username</td></tr>
+        <tr><td><code>DB_PASSWORD</code></td><td><span class="chip red">Yes</span></td><td>MySQL password</td></tr>
+        <tr><td><code>DB_NAME</code></td><td><span class="chip red">Yes</span></td><td>Management database name</td></tr>
+        <tr><td><code>DB_SYNCHRONIZE</code></td><td><span class="chip yellow">No</span></td><td>Must be <code>false</code> in production</td></tr>
+        <tr><td><code>REDIS_URL</code></td><td><span class="chip red">Yes</span></td><td>Redis connection URL</td></tr>
+        <tr><td><code>REDIS_PASSWORD</code></td><td><span class="chip yellow">No</span></td><td>Redis auth password</td></tr>
+        <tr><td><code>BULL_QUEUE_PREFIX</code></td><td><span class="chip yellow">No</span></td><td>BullMQ Redis key prefix (default <code>fusecore</code>)</td></tr>
+        <tr><td><code>SLOW_REQUEST_MS</code></td><td><span class="chip yellow">No</span></td><td>Slow request warning threshold in ms (default 1000)</td></tr>
+        <tr><td><code>SLOW_QUERY_MS</code></td><td><span class="chip yellow">No</span></td><td>Slow SQL query warning threshold in ms (default 500)</td></tr>
+        <tr><td><code>ADMIN_API_KEY</code></td><td><span class="chip red">Yes</span></td><td>Admin secret for tenant and API-key management endpoints</td></tr>
+        <tr><td><code>ENCRYPTION_KEY</code></td><td><span class="chip red">Yes</span></td><td>64-char hex (32 bytes) — AES-256-GCM key for PII columns</td></tr>
+        <tr><td><code>ENCRYPTION_HASH_PEPPER</code></td><td><span class="chip red">Yes</span></td><td>64-char hex (32 bytes) — HMAC-SHA256 pepper for blind indexes</td></tr>
+        <tr><td><code>THROTTLE_TTL</code></td><td><span class="chip yellow">No</span></td><td>Rate limit window in ms (default 60000)</td></tr>
+        <tr><td><code>THROTTLE_LIMIT</code></td><td><span class="chip yellow">No</span></td><td>Max requests per window (default 100)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout danger">
+    <strong>Security constraint:</strong> ENCRYPTION_KEY and ENCRYPTION_HASH_PEPPER must never be the same value and must never be committed to source control. Key rotation requires a full re-encryption backfill of all encrypted rows.
+  </div>
+</section>
+
+<!-- ═══════════ COMMANDS ═══════════ -->
+<section id="commands">
+  <h2><span class="icon">◈</span>Commands</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Command</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>yarn start:dev</code></td><td>Start API in watch mode</td></tr>
+        <tr><td><code>yarn start:worker:dev</code></td><td>Start BullMQ worker in watch mode</td></tr>
+        <tr><td><code>yarn build</code></td><td>Compile both apps to dist/</td></tr>
+        <tr><td><code>yarn lint</code></td><td>ESLint --fix across all files</td></tr>
+        <tr><td><code>yarn format</code></td><td>Prettier --write across all files</td></tr>
+        <tr><td><code>yarn test</code></td><td>Run Jest unit tests</td></tr>
+        <tr><td><code>yarn test:cov</code></td><td>Generate coverage report</td></tr>
+        <tr><td><code>yarn db:migration:generate -- --name Name</code></td><td>Generate a new migration from entity diffs</td></tr>
+        <tr><td><code>yarn db:migration:run</code></td><td>Apply pending migrations</td></tr>
+        <tr><td><code>yarn db:migration:revert</code></td><td>Revert last migration</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════ AUTH ═══════════ -->
+<section id="auth">
+  <h2><span class="icon">◈</span>Authentication</h2>
+  <p>All domain routes require the <code>X-API-Key</code> header. The guard is global — registered as <code>APP_GUARD</code> in <code>api.module.ts</code>. Do not add <code>@UseGuards(ApiKeyGuard)</code> to individual controllers.</p>
+
+  <h3>API Key Header</h3>
+  <pre>X-API-Key: &lt;your-api-key&gt;
+X-Request-ID: &lt;uuid-v4-request-id&gt;  <span class="cm">// optional; generated if missing or invalid</span></pre>
+
+  <h3>Managed API Keys</h3>
+  <p>Tenant API keys are stored in <code>tenant_api_keys</code> as hashes. Each key has a name, prefix, status, scopes, optional expiry, optional per-key IP allowlist, and usage metadata. Plaintext keys are returned only once when created or rotated.</p>
+  <p>Key lifecycle events and denied API requests are persisted in the admin database <code>security_audit_logs</code> table.</p>
+
+  <h3>Scopes</h3>
+  <p>Keys may be granted <code>*</code> or explicit scopes such as <code>customers:read</code>, <code>customers:write</code>, <code>accounts:read</code>, <code>accounts:write</code>, <code>transactions:read</code>, <code>transactions:write</code>, <code>payments:read</code>, <code>payments:write</code>, <code>charges:read</code>, <code>charges:write</code>, <code>reconciliation:read</code>, <code>reconciliation:write</code>, <code>webhooks:read</code>, <code>webhooks:write</code>, <code>ledger:read</code>, <code>ledger:write</code>, <code>loans:read</code>, <code>loans:write</code>, <code>products:read</code>, <code>products:write</code>, <code>reporting:read</code>, <code>metrics:read</code>, <code>aml:read</code>, and <code>aml:write</code>.</p>
+
+  <h3>IP Allowlist (optional)</h3>
+  <p>Set per-key <code>allowedIps</code> to restrict a tenant API key. If a key has no per-key list, IP validation is skipped for that key. Admin routes use <code>X-Admin-API-Key</code> and do not perform IP allowlist checks.</p>
+
+  <h3>Public Routes</h3>
+  <p>Endpoints decorated with <code>@Public()</code> bypass API key validation. Currently only the health check (<code>GET /health</code>) is public.</p>
+
+  <div class="callout info">
+    <strong>No customer-facing login layer.</strong> FuseCore is a B2B service. Access is controlled with managed tenant API keys, scopes, expiry, revocation, request IDs, and IP allowlists.
+  </div>
+</section>
+
+<!-- ═══════════ RESPONSE FORMAT ═══════════ -->
+<section id="response">
+  <h2><span class="icon">◈</span>Response Format</h2>
+  <p>All endpoints return a consistent JSON envelope.</p>
+
+  <h3>Success</h3>
+  <pre>{
+  <span class="prop">"NO_ERROR"</span>: <span class="num">true</span>,
+  <span class="prop">"message"</span>: <span class="str">"Operation successful"</span>,
+  <span class="prop">"data"</span>: { ... }
+}</pre>
+
+  <h3>Paginated Success</h3>
+  <pre>{
+  <span class="prop">"NO_ERROR"</span>: <span class="num">true</span>,
+  <span class="prop">"message"</span>: <span class="str">"Records fetched"</span>,
+  <span class="prop">"data"</span>: [ ... ],
+  <span class="prop">"meta"</span>: {
+    <span class="prop">"total"</span>: <span class="num">142</span>,
+    <span class="prop">"page"</span>: <span class="num">1</span>,
+    <span class="prop">"limit"</span>: <span class="num">20</span>,
+    <span class="prop">"totalPages"</span>: <span class="num">8</span>
+  }
+}</pre>
+
+  <h3>Error</h3>
+  <pre>{
+  <span class="prop">"success"</span>: <span class="num">false</span>,
+  <span class="prop">"statusCode"</span>: <span class="num">422</span>,
+  <span class="prop">"errorCode"</span>: <span class="str">"INSUFFICIENT_BALANCE"</span>,
+  <span class="prop">"message"</span>: <span class="str">"Account not found"</span>,
+  <span class="prop">"path"</span>: <span class="str">"/api/v1/transactions/debit"</span>,
+  <span class="prop">"requestId"</span>: <span class="str">"8f9a..."</span>,
+  <span class="prop">"timestamp"</span>: <span class="str">"2026-05-10T19:00:00.000Z"</span>
+}</pre>
+
+  <h3>HTTP Status Codes</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>200 OK</code></td><td>Standard success (GET, PATCH, and some POSTs)</td></tr>
+        <tr><td><code>201 Created</code></td><td>Resource created (POST create endpoints)</td></tr>
+        <tr><td><code>400 Bad Request</code></td><td>Validation error or business rule violation</td></tr>
+        <tr><td><code>401 Unauthorized</code></td><td>Missing or invalid API key</td></tr>
+        <tr><td><code>403 Forbidden</code></td><td>IP not in allowlist or API key lacks required scope</td></tr>
+        <tr><td><code>404 Not Found</code></td><td>Resource does not exist</td></tr>
+        <tr><td><code>429 Too Many Requests</code></td><td>Rate limit exceeded</td></tr>
+        <tr><td><code>500 Internal Server Error</code></td><td>Unexpected server error</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════ API GOVERNANCE ═══════════ -->
+<section id="api-governance">
+  <h2><span class="icon">◈</span>API Governance</h2>
+
+  <h3>Error Code Catalog</h3>
+  <p>Error responses include a stable <code>errorCode</code> for client branching and alert routing.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Error code</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>VALIDATION_ERROR</code></td><td>Request shape, type, or validation rule failed</td></tr>
+        <tr><td><code>AUTHENTICATION_REQUIRED</code></td><td>Missing or invalid API key</td></tr>
+        <tr><td><code>AUTHORIZATION_FAILED</code></td><td>Scope, status, expiry, or IP allowlist check failed</td></tr>
+        <tr><td><code>RESOURCE_NOT_FOUND</code></td><td>Requested record does not exist</td></tr>
+        <tr><td><code>CONFLICT</code></td><td>Duplicate or conflicting resource state</td></tr>
+        <tr><td><code>RATE_LIMITED</code></td><td>Rate limit exceeded</td></tr>
+        <tr><td><code>IDEMPOTENCY_KEY_REQUIRED</code></td><td>Money movement request was sent without <code>Idempotency-Key</code></td></tr>
+        <tr><td><code>INSUFFICIENT_BALANCE</code></td><td>Available balance cannot cover amount plus charges</td></tr>
+        <tr><td><code>ACCOUNT_INVALID_STATE</code></td><td>Account or loan state blocks the operation</td></tr>
+        <tr><td><code>LIMIT_EXCEEDED</code></td><td>Daily, product, mandate, or risk-based limit was exceeded</td></tr>
+        <tr><td><code>BUSINESS_RULE_VIOLATION</code></td><td>Domain rule rejected the request</td></tr>
+        <tr><td><code>INTERNAL_ERROR</code></td><td>Unexpected server error</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Pagination, Filtering &amp; Sorting</h3>
+  <p>List endpoints use <code>page</code>, <code>limit</code>, <code>sortBy</code>, and <code>sortOrder=ASC|DESC</code>. Defaults are <code>page=1</code>, <code>limit=20</code>, and descending created-date order. <code>limit</code> is capped at <code>100</code>. Unknown sort fields fall back to the endpoint default.</p>
+  <p>Standard sorting is enabled for customers, accounts, transactions, payments, loans, and loan repayments. Domain filters such as <code>status</code>, <code>type</code>, <code>customerId</code>, <code>accountNumber</code>, <code>fromDate</code>, and <code>toDate</code> remain endpoint-specific.</p>
+
+  <h3>Money Movement Idempotency</h3>
+  <p>All externally exposed money movement endpoints require the <code>Idempotency-Key</code> header. The key must be unique per business operation and no longer than 128 characters. Replaying the same key returns the original movement where applicable instead of posting money again.</p>
+  <pre>Idempotency-Key: PAY-2026-000001</pre>
+  <p>Protected routes: <code>POST /transactions/transfer</code>, <code>POST /transactions/debit</code>, <code>POST /transactions/credit</code>, <code>POST /payments</code>, <code>PATCH /loans/:id/disburse</code>, <code>POST /loans/:id/repay</code>, <code>POST /loans/:id/recover</code>, and <code>PATCH /loans/:id/foreclose</code>.</p>
+</section>
+
+<!-- ═══════════ TENANTS ═══════════ -->
+<section id="tenants">
+  <h2><span class="icon">◈</span>Tenants</h2>
+  <p>Tenant management creates isolated database environments. Each tenant gets its own MySQL database identified by a <code>shortname</code>. Tenant identity is resolved from the <code>X-API-Key</code> header on every request — each API key is tied to exactly one tenant.</p>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/admin/tenants</span>
+      <span class="endpoint-desc">Create tenant + provision database</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"name"</span>: <span class="str">"Acme MFB"</span>,
+  <span class="prop">"shortname"</span>: <span class="str">"acme"</span>  <span class="cm">// 3–48 chars, a-z/0-9/_ only, must start with a letter — becomes the MySQL DB name</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/admin/tenants</span>
+      <span class="endpoint-desc">List all tenants</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/admin/tenants/:id</span>
+      <span class="endpoint-desc">Get tenant by ID</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/admin/tenants/:id</span>
+      <span class="endpoint-desc">Update tenant name or active status</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"name"</span>: <span class="str">"Acme MFB Ltd"</span>,   <span class="cm">// optional</span>
+  <span class="prop">"isActive"</span>: <span class="num">false</span>          <span class="cm">// optional — false suspends the tenant</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/admin/tenants/:id/rotate-key</span>
+      <span class="endpoint-desc">Rotate the tenant's API key — returns the new key once, store it immediately</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/admin/tenants/:id/api-keys</span>
+      <span class="endpoint-desc">Create a managed API key — plaintext returned once</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"name"</span>: <span class="str">"Payments backend"</span>,
+  <span class="prop">"scopes"</span>: [<span class="str">"payments:write"</span>, <span class="str">"transactions:read"</span>],
+  <span class="prop">"allowedIps"</span>: [<span class="str">"10.0.0.12"</span>],
+  <span class="prop">"expiresAt"</span>: <span class="str">"2027-01-01T00:00:00.000Z"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/admin/tenants/:id/api-keys</span>
+      <span class="endpoint-desc">List managed API keys without plaintext secrets</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/admin/tenants/:id/api-keys/:keyId/rotate</span>
+      <span class="endpoint-desc">Revoke one key and create a replacement with the same scopes/IPs</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/admin/tenants/:id/api-keys/:keyId/revoke</span>
+      <span class="endpoint-desc">Revoke a managed API key</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/admin/tenants/:id/api-keys/:keyId/scopes</span>
+      <span class="endpoint-desc">Replace a key's scopes</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/admin/tenants/:id/api-keys/:keyId/allowed-ips</span>
+      <span class="endpoint-desc">Replace a key's per-key IP allowlist</span>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <strong>Tenant resolution via API key.</strong> Domain endpoints are flat — e.g. <code>/api/v1/accounts</code>, <code>/api/v1/loans</code>. The API resolves the calling tenant from the <code>X-API-Key</code> header on every request and routes all queries to that tenant's isolated database.
+  </div>
+</section>
+
+<!-- ═══════════ CUSTOMERS ═══════════ -->
+<section id="customers">
+  <h2><span class="icon">◈</span>Customers</h2>
+  <p>Customer records hold KYC identity data. PII fields (email, phone, BVN, NIN) are encrypted at rest and queried via blind indexes. Corporate and relationship modeling is handled through first-class related-party records.</p>
+
+  <h3>Relationship Coverage</h3>
+  <ul style="color:var(--muted);line-height:2">
+    <li><strong>Already present before this upgrade:</strong> customer type, KYC fields, encrypted identifiers, customer documents, AML fields, and a corporate profile JSON block.</li>
+    <li><strong>Added:</strong> corporate directors, beneficial owners, shareholders, guarantors, family links, parent/subsidiary links, and other related-party relationships.</li>
+  </ul>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/customers</span>
+      <span class="endpoint-desc">Create a new customer</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"firstName"</span>: <span class="str">"John"</span>,
+  <span class="prop">"lastName"</span>: <span class="str">"Doe"</span>,
+  <span class="prop">"email"</span>: <span class="str">"john@example.com"</span>,
+  <span class="prop">"phone"</span>: <span class="str">"+2348012345678"</span>,
+  <span class="prop">"middleName"</span>: <span class="str">"Chukwu"</span>,         <span class="cm">// optional</span>
+  <span class="prop">"type"</span>: <span class="str">"INDIVIDUAL"</span>,           <span class="cm">// optional — INDIVIDUAL | CORPORATE</span>
+  <span class="prop">"dateOfBirth"</span>: <span class="str">"1990-05-15"</span>,   <span class="cm">// optional</span>
+  <span class="prop">"gender"</span>: <span class="str">"MALE"</span>,              <span class="cm">// optional — MALE | FEMALE | OTHER</span>
+  <span class="prop">"address"</span>: {                    <span class="cm">// optional</span>
+    <span class="prop">"street"</span>: <span class="str">"5 Broad Street"</span>,
+    <span class="prop">"city"</span>: <span class="str">"Lagos"</span>,
+    <span class="prop">"state"</span>: <span class="str">"Lagos"</span>,
+    <span class="prop">"country"</span>: <span class="str">"Nigeria"</span>,
+    <span class="prop">"postalCode"</span>: <span class="str">"100001"</span>        <span class="cm">// optional</span>
+  },
+  <span class="prop">"identityType"</span>: <span class="str">"BVN"</span>,         <span class="cm">// optional — NIN | BVN | PASSPORT | DRIVERS_LICENSE | VOTERS_CARD</span>
+  <span class="prop">"identityNumber"</span>: <span class="str">"22212345678"</span>, <span class="cm">// optional — the value for identityType</span>
+  <span class="prop">"bvn"</span>: <span class="str">"22212345678"</span>,           <span class="cm">// optional — dedicated BVN field (encrypted)</span>
+  <span class="prop">"nin"</span>: <span class="str">"12345678901"</span>,           <span class="cm">// optional — dedicated NIN field (encrypted)</span>
+  <span class="prop">"corporateProfile"</span>: {           <span class="cm">// optional — only for type CORPORATE</span>
+    <span class="prop">"businessName"</span>: <span class="str">"Acme Ltd"</span>,
+    <span class="prop">"rcNumber"</span>: <span class="str">"RC123456"</span>,
+    <span class="prop">"taxId"</span>: <span class="str">"TIN123456"</span>,
+    <span class="prop">"incorporationDate"</span>: <span class="str">"2010-03-01"</span>
+  }
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/customers</span>
+      <span class="endpoint-desc">List customers (paginated)</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code>, <code>search</code>, <code>status</code> (<code>ACTIVE</code> | <code>INACTIVE</code> | <code>SUSPENDED</code> | <code>BLACKLISTED</code>), <code>kycLevel</code> (<code>TIER_0</code> | <code>TIER_1</code> | <code>TIER_2</code> | <code>TIER_3</code>)</p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/customers/search</span>
+      <span class="endpoint-desc">Look up a customer by PII — searches encrypted fields via blind index</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params (at least one required): <code>bvn</code>, <code>nin</code>, <code>phone</code>, <code>email</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/customers/:id</span>
+      <span class="endpoint-desc">Get customer by ID</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/customers/no/:customerNo</span>
+      <span class="endpoint-desc">Get customer by customer number</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PUT">PUT</span>
+      <span class="endpoint-path">/api/v1/customers/:id</span>
+      <span class="endpoint-desc">Update customer details (all optional fields)</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/customers/:id/kyc</span>
+      <span class="endpoint-desc">Update KYC level</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{ <span class="prop">"kycLevel"</span>: <span class="str">"TIER_2"</span> }  <span class="cm">// TIER_0 | TIER_1 | TIER_2 | TIER_3</span></pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/customers/:id/status</span>
+      <span class="endpoint-desc">Change customer status</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{ <span class="prop">"status"</span>: <span class="str">"SUSPENDED"</span> }  <span class="cm">// ACTIVE | INACTIVE | SUSPENDED | BLACKLISTED</span></pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/customers/:id/documents</span>
+      <span class="endpoint-desc">Attach a KYC document to a customer</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"documentType"</span>: <span class="str">"PASSPORT"</span>,   <span class="cm">// DocumentType enum</span>
+  <span class="prop">"documentUrl"</span>: <span class="str">"https://storage.example.com/docs/passport.pdf"</span>,
+  <span class="prop">"description"</span>: <span class="str">"International passport"</span>  <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/customers/:id/documents</span>
+      <span class="endpoint-desc">List all documents attached to a customer</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/customers/:id/related-parties</span>
+      <span class="endpoint-desc">List directors, beneficial owners, and other related parties</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/customers/:id/related-parties</span>
+      <span class="endpoint-desc">Record a customer related-party link</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"relatedCustomerId"</span>: <span class="num">42</span>,
+  <span class="prop">"relationshipType"</span>: <span class="str">"BENEFICIAL_OWNER"</span>, <span class="cm">// DIRECTOR | BENEFICIAL_OWNER | SHAREHOLDER | GUARANTOR | SPOUSE | NEXT_OF_KIN | SUBSIDIARY | PARENT_COMPANY | OTHER</span>
+  <span class="prop">"title"</span>: <span class="str">"Director"</span>,                    <span class="cm">// optional</span>
+  <span class="prop">"ownershipPercent"</span>: <span class="num">35</span>,               <span class="cm">// optional</span>
+  <span class="prop">"isBeneficialOwner"</span>: <span class="num">true</span>            <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ ACCOUNTS ═══════════ -->
+<section id="accounts">
+  <h2><span class="icon">◈</span>Accounts</h2>
+  <p>Accounts support one primary customer plus first-class joint parties, signatories, mandates, and beneficiaries. Active mandates can require approvals before sensitive account operations are accepted.</p>
+
+  <h3>Relationship Coverage</h3>
+  <ul style="color:var(--muted);line-height:2">
+    <li><strong>Already present before this upgrade:</strong> account owner, balances, product linkage, limits, overdraft, liens, status changes, and fixed-deposit closure.</li>
+    <li><strong>Added:</strong> joint accounts, account signatories, account mandates, beneficiaries, and mandate validation for status changes, lien placement/release, and fixed-deposit closure.</li>
+  </ul>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/accounts</span>
+      <span class="endpoint-desc">Open a new account</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"customerId"</span>: <span class="num">1</span>,
+  <span class="prop">"type"</span>: <span class="str">"SAVINGS"</span>,              <span class="cm">// SAVINGS | CURRENT | FIXED_DEPOSIT | DOMICILIARY | LOAN</span>
+  <span class="prop">"currency"</span>: <span class="str">"NGN"</span>,               <span class="cm">// optional — NGN | USD | GBP | EUR</span>
+  <span class="prop">"productId"</span>: <span class="num">3</span>,                 <span class="cm">// optional — links to a product for rate/limit rules</span>
+  <span class="prop">"alias"</span>: <span class="str">"John Doe Savings"</span>,   <span class="cm">// optional — friendly label</span>
+  <span class="prop">"allowOverdraft"</span>: <span class="num">false</span>,        <span class="cm">// optional</span>
+  <span class="prop">"overdraftLimit"</span>: <span class="num">0</span>,            <span class="cm">// optional — kobo</span>
+  <span class="prop">"dailyTransactionLimit"</span>: <span class="num">5000000</span>, <span class="cm">// optional — kobo</span>
+  <span class="prop">"maturityDate"</span>: <span class="str">"2027-04-01"</span>    <span class="cm">// optional — for FIXED_DEPOSIT</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/accounts</span>
+      <span class="endpoint-desc">List accounts (paginated)</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code>, <code>customerId</code>, <code>type</code>, <code>status</code>, <code>currency</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/accounts/search</span>
+      <span class="endpoint-desc">Search account by account number</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>accountNumber</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/accounts/:id</span>
+      <span class="endpoint-desc">Get account by ID</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/accounts/no/:accountNumber</span>
+      <span class="endpoint-desc">Get account by account number</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/accounts/customer/:customerId</span>
+      <span class="endpoint-desc">Get all accounts belonging to a customer</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/accounts/no/:accountNumber/balance</span>
+      <span class="endpoint-desc">Get live balance by account number (Redis-cached, 30 s TTL)</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PUT">PUT</span>
+      <span class="endpoint-path">/api/v1/accounts/:id</span>
+      <span class="endpoint-desc">Update account settings (alias, overdraft limit, daily limit, etc.)</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/parties</span>
+      <span class="endpoint-desc">List primary, joint, and authorized account parties</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/parties</span>
+      <span class="endpoint-desc">Add a joint owner or authorized operator</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"customerId"</span>: <span class="num">2</span>,
+  <span class="prop">"role"</span>: <span class="str">"JOINT"</span>,             <span class="cm">// PRIMARY | JOINT | AUTHORIZED_OPERATOR</span>
+  <span class="prop">"ownershipPercent"</span>: <span class="num">50</span>      <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/signatories</span>
+      <span class="endpoint-desc">List account signatories</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/signatories</span>
+      <span class="endpoint-desc">Add an account signatory</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"customerId"</span>: <span class="num">2</span>,
+  <span class="prop">"title"</span>: <span class="str">"Finance Director"</span>,
+  <span class="prop">"authorizationLimit"</span>: <span class="num">5000000</span>,
+  <span class="prop">"signatureUrl"</span>: <span class="str">"https://storage.example.com/signatures/2.png"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/mandates</span>
+      <span class="endpoint-desc">List account mandates</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/mandates</span>
+      <span class="endpoint-desc">Create an authorization mandate</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"mandateType"</span>: <span class="str">"ANY_TWO"</span>,       <span class="cm">// SINGLE | ANY_TWO | ALL | MIN_APPROVALS</span>
+  <span class="prop">"operationType"</span>: <span class="str">"LIEN"</span>,        <span class="cm">// ALL | DEBIT | TRANSFER | LIEN | CLOSURE | STATUS_UPDATE</span>
+  <span class="prop">"thresholdAmount"</span>: <span class="num">1000000</span>,    <span class="cm">// optional</span>
+  <span class="prop">"description"</span>: <span class="str">"Two signatories for large holds"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/validate-operation</span>
+      <span class="endpoint-desc">Validate approvers against active account mandates</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"operationType"</span>: <span class="str">"LIEN"</span>,
+  <span class="prop">"amount"</span>: <span class="num">1500000</span>,
+  <span class="prop">"approverCustomerIds"</span>: [<span class="num">2</span>, <span class="num">3</span>]
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/beneficiaries</span>
+      <span class="endpoint-desc">List saved beneficiaries</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/beneficiaries</span>
+      <span class="endpoint-desc">Add an account beneficiary</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"beneficiaryCustomerId"</span>: <span class="num">7</span>,       <span class="cm">// optional for internal beneficiaries</span>
+  <span class="prop">"beneficiaryName"</span>: <span class="str">"Acme Supplies Ltd"</span>,
+  <span class="prop">"beneficiaryAccountNumber"</span>: <span class="str">"0123456789"</span>,
+  <span class="prop">"bankCode"</span>: <span class="str">"999999"</span>,             <span class="cm">// optional</span>
+  <span class="prop">"bankName"</span>: <span class="str">"Example Bank"</span>       <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/status</span>
+      <span class="endpoint-desc">Change account status</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"status"</span>: <span class="str">"FROZEN"</span>,   <span class="cm">// ACTIVE | INACTIVE | FROZEN | CLOSED | DORMANT | PND</span>
+  <span class="prop">"reason"</span>: <span class="str">"Court order"</span>, <span class="cm">// optional</span>
+  <span class="prop">"authorization"</span>: { <span class="prop">"approverCustomerIds"</span>: [<span class="num">2</span>, <span class="num">3</span>] } <span class="cm">// optional unless mandate requires it</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/lien</span>
+      <span class="endpoint-desc">Place a lien (hold) on the account — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"amount"</span>: <span class="num">100000</span>,         <span class="cm">// kobo, required</span>
+  <span class="prop">"reason"</span>: <span class="str">"Loan collateral"</span>, <span class="cm">// optional</span>
+  <span class="prop">"authorization"</span>: { <span class="prop">"approverCustomerIds"</span>: [<span class="num">2</span>, <span class="num">3</span>] } <span class="cm">// optional unless mandate requires it</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method DELETE">DELETE</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/lien</span>
+      <span class="endpoint-desc">Release a lien — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"amount"</span>: <span class="num">100000</span>,  <span class="cm">// kobo — amount of lien to release</span>
+  <span class="prop">"reason"</span>: <span class="str">"Loan settled"</span>, <span class="cm">// optional</span>
+  <span class="prop">"authorization"</span>: { <span class="prop">"approverCustomerIds"</span>: [<span class="num">2</span>, <span class="num">3</span>] } <span class="cm">// optional unless mandate requires it</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/accounts/:id/close-fixed-deposit</span>
+      <span class="endpoint-desc">Close a fixed-deposit account — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"closureType"</span>: <span class="str">"STANDARD"</span>,  <span class="cm">// STANDARD | PREMATURE</span>
+  <span class="prop">"reason"</span>: <span class="str">"Customer request"</span>,  <span class="cm">// optional</span>
+  <span class="prop">"authorization"</span>: { <span class="prop">"approverCustomerIds"</span>: [<span class="num">2</span>, <span class="num">3</span>] } <span class="cm">// optional unless mandate requires it</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <strong>All monetary values are in Kobo (lowest denomination).</strong> ₦1,000 = 100,000 kobo. Never pass fractional kobo values. Use <code>decimal.js</code> for all arithmetic — never native JS floats.
+  </div>
+</section>
+
+<!-- ═══════════ TRANSACTIONS ═══════════ -->
+<section id="transactions">
+  <h2><span class="icon">◈</span>Transactions</h2>
+  <p>All three operations — debit, credit, transfer — are throttled at 10 requests per 60 s and require the <code>Idempotency-Key</code> header. Duplicate keys return the original result without re-executing. Minimum amount is 100 kobo (₦1).</p>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/transactions/debit</span>
+      <span class="endpoint-desc">Debit an account — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"accountNumber"</span>: <span class="str">"0012345678"</span>,
+  <span class="prop">"amount"</span>: <span class="num">50000</span>,             <span class="cm">// kobo, min 100</span>
+  <span class="prop">"narration"</span>: <span class="str">"Airtime purchase"</span>,  <span class="cm">// optional</span>
+  <span class="prop">"channel"</span>: <span class="str">"USSD"</span>,              <span class="cm">// optional — MOBILE | WEB | USSD | API | INTERNAL | ATM | POS | TELLER</span>
+  <span class="prop">"reference"</span>: <span class="str">"TXN-abc123"</span>       <span class="cm">// optional body alias; Idempotency-Key header is canonical</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/transactions/credit</span>
+      <span class="endpoint-desc">Credit an account — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"accountNumber"</span>: <span class="str">"0012345678"</span>,
+  <span class="prop">"amount"</span>: <span class="num">200000</span>,             <span class="cm">// kobo, min 100</span>
+  <span class="prop">"narration"</span>: <span class="str">"Salary payment"</span>,   <span class="cm">// optional</span>
+  <span class="prop">"channel"</span>: <span class="str">"INTERNAL"</span>,          <span class="cm">// optional</span>
+  <span class="prop">"reference"</span>: <span class="str">"SAL-2026-04"</span>      <span class="cm">// optional body alias; Idempotency-Key header is canonical</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/transactions/transfer</span>
+      <span class="endpoint-desc">Transfer between two accounts — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"sourceAccountNumber"</span>: <span class="str">"0012345678"</span>,
+  <span class="prop">"destinationAccountNumber"</span>: <span class="str">"0087654321"</span>,
+  <span class="prop">"amount"</span>: <span class="num">100000</span>,              <span class="cm">// kobo, min 100</span>
+  <span class="prop">"narration"</span>: <span class="str">"Rent payment"</span>,    <span class="cm">// optional</span>
+  <span class="prop">"channel"</span>: <span class="str">"API"</span>,               <span class="cm">// optional</span>
+  <span class="prop">"idempotencyKey"</span>: <span class="str">"TRF-abc123"</span>   <span class="cm">// optional body alias; Idempotency-Key header is canonical</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/transactions</span>
+      <span class="endpoint-desc">List transactions (paginated)</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code>, <code>accountNumber</code>, <code>status</code> (<code>PENDING</code> | <code>PROCESSING</code> | <code>SUCCESSFUL</code> | <code>FAILED</code> | <code>REVERSED</code>), <code>fromDate</code>, <code>toDate</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/transactions/:id</span>
+      <span class="endpoint-desc">Get transaction by ID</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/transactions/ref/:ref</span>
+      <span class="endpoint-desc">Get transaction by reference</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/transactions/:id/receipt</span>
+      <span class="endpoint-desc">Get transaction receipt</span>
+    </div>
+  </div>
+
+  <h3>Transfer Concurrency Safety</h3>
+  <p>Inside the transfer's database transaction, both source and destination accounts are locked with <code>SELECT ... FOR UPDATE</code> (pessimistic write lock) before any balance modification occurs. This prevents phantom balance reads under concurrent writes.</p>
+</section>
+
+<!-- ═══════════ PAYMENTS ═══════════ -->
+<section id="payments">
+  <h2><span class="icon">◈</span>Payments</h2>
+  <p>Outbound payment initiation and status tracking. Each payment debits the source account and initiates the external settlement flow. Throttled at 10 requests per 60 s. Minimum amount is 100 kobo.</p>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/payments</span>
+      <span class="endpoint-desc">Initiate a payment — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"type"</span>: <span class="str">"EXTERNAL_TRANSFER"</span>,           <span class="cm">// INTERNAL_TRANSFER | EXTERNAL_TRANSFER | BILL_PAYMENT | AIRTIME | DATA | CARD_FUNDING</span>
+  <span class="prop">"sourceAccountNumber"</span>: <span class="str">"0012345678"</span>,
+  <span class="prop">"amount"</span>: <span class="num">500000</span>,                      <span class="cm">// kobo, min 100</span>
+  <span class="prop">"destinationAccountNumber"</span>: <span class="str">"0123456789"</span>, <span class="cm">// optional</span>
+  <span class="prop">"destinationBankCode"</span>: <span class="str">"058"</span>,             <span class="cm">// optional</span>
+  <span class="prop">"destinationAccountName"</span>: <span class="str">"Acme Supplies Ltd"</span>, <span class="cm">// optional</span>
+  <span class="prop">"destinationBankName"</span>: <span class="str">"GTBank"</span>,          <span class="cm">// optional</span>
+  <span class="prop">"narration"</span>: <span class="str">"Vendor payment"</span>,            <span class="cm">// optional</span>
+  <span class="prop">"channel"</span>: <span class="str">"BANK_TRANSFER"</span>,              <span class="cm">// optional — BANK_TRANSFER | CARD | WALLET | USSD | API</span>
+  <span class="prop">"idempotencyKey"</span>: <span class="str">"PAY-uuid-001"</span>         <span class="cm">// optional body alias; Idempotency-Key header is canonical</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/payments</span>
+      <span class="endpoint-desc">List payments (paginated)</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code>, <code>accountNumber</code>, <code>status</code> (<code>PENDING</code> | <code>PROCESSING</code> | <code>SUCCESSFUL</code> | <code>FAILED</code> | <code>REVERSED</code> | <code>CANCELLED</code>), <code>type</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/payments/:id</span>
+      <span class="endpoint-desc">Get payment by ID</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/payments/ref/:ref</span>
+      <span class="endpoint-desc">Get payment by reference</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ LOANS ═══════════ -->
+<section id="loans">
+  <h2><span class="icon">◈</span>Loans</h2>
+  <p>Full lending lifecycle from application through closure, with collateral, valuation history, restructuring, arrears aging, penalty interest, collections workflow, provisioning, write-off, recovery, and foreclosure paths.</p>
+
+  <h3>Operations Coverage</h3>
+  <ul style="color:var(--muted);line-height:2">
+    <li><strong>Already present before this upgrade:</strong> application, approval, rejection, disbursement, schedules, repayments, write-off/undo, recovery, foreclosure, interest waiver, and GL posting for the core loan lifecycle.</li>
+    <li><strong>Added:</strong> collateral entities, valuation records, restructuring/rescheduling history, arrears aging buckets, penalty interest, automated default detection, collections status workflow, provisioning fields, schedule-aware partial payment allocation, and penalty GL posting rules.</li>
+  </ul>
+
+  <h3>Loan State Machine</h3>
+  <div class="state-flow">
+    <span class="chip blue">PENDING</span>
+    <span class="arrow">→</span>
+    <span class="chip gray">UNDER_REVIEW</span>
+    <span class="arrow">→</span>
+    <span class="chip yellow">APPROVED</span>
+    <span class="arrow">→</span>
+    <span class="chip green">DISBURSED</span>
+    <span class="arrow">→</span>
+    <span class="chip green">ACTIVE</span>
+    <span class="arrow">→</span>
+    <span class="chip green">CLOSED</span>
+  </div>
+  <div class="state-flow">
+    <span class="chip blue">PENDING</span>
+    <span class="arrow">→</span>
+    <span class="chip red">REJECTED</span>
+  </div>
+  <div class="state-flow">
+    <span class="chip green">ACTIVE</span>
+    <span class="arrow">→</span>
+    <span class="chip red">DEFAULTED</span>
+  </div>
+  <div class="state-flow">
+    <span class="chip green">ACTIVE / DEFAULTED</span>
+    <span class="arrow">→</span>
+    <span class="chip red">WRITTEN_OFF</span>
+    <span class="arrow">→</span>
+    <span class="chip green">ACTIVE</span>
+    <span class="arrow">(undo write-off)</span>
+  </div>
+  <div class="state-flow">
+    <span class="chip green">ACTIVE</span>
+    <span class="arrow">→</span>
+    <span class="chip purple">FORECLOSED</span>
+  </div>
+
+  <h3>Disbursement — Two-Phase Commit</h3>
+  <p>Disbursement follows a two-phase pattern to preserve financial integrity:</p>
+  <ol style="color:var(--muted);padding-left:20px;line-height:2">
+    <li><strong>Phase 1 (DB transaction):</strong> Loan status updated to DISBURSED/ACTIVE, GL entries posted — all in a single atomic DB transaction.</li>
+    <li><strong>Phase 2 (credit):</strong> Account credit executed. If the credit fails, a compensating GL reversal and loan state rollback are immediately applied.</li>
+  </ol>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/loans</span>
+      <span class="endpoint-desc">Submit a loan application</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"customerId"</span>: <span class="num">1</span>,
+  <span class="prop">"type"</span>: <span class="str">"PERSONAL"</span>,             <span class="cm">// PERSONAL | BUSINESS | MORTGAGE | AUTO | STUDENT</span>
+  <span class="prop">"principalAmount"</span>: <span class="num">1000000</span>,   <span class="cm">// kobo, min 100,000 (₦1,000)</span>
+  <span class="prop">"interestRate"</span>: <span class="num">5.0</span>,            <span class="cm">// percent, 0–100</span>
+  <span class="prop">"tenorDays"</span>: <span class="num">90</span>,               <span class="cm">// min 30</span>
+  <span class="prop">"disbursementAccountId"</span>: <span class="num">12</span>,   <span class="cm">// optional — account to disburse into</span>
+  <span class="prop">"repaymentFrequency"</span>: <span class="str">"MONTHLY"</span>, <span class="cm">// optional — DAILY | WEEKLY | BIWEEKLY | MONTHLY | QUARTERLY | BULLET</span>
+  <span class="prop">"purpose"</span>: <span class="str">"Working capital"</span>      <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/loans</span>
+      <span class="endpoint-desc">List loans (paginated)</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code>, <code>customerId</code>, <code>status</code>, <code>type</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/loans/:id</span>
+      <span class="endpoint-desc">Get loan by ID</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/loans/ref/:ref</span>
+      <span class="endpoint-desc">Get loan by reference</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/loans/:id/repayments</span>
+      <span class="endpoint-desc">Get repayment history (paginated)</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/loans/:id/schedule</span>
+      <span class="endpoint-desc">Get repayment schedule</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/loans/:id/collateral</span>
+      <span class="endpoint-desc">List collateral and valuation history</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/loans/:id/collateral</span>
+      <span class="endpoint-desc">Record collateral</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"type"</span>: <span class="str">"VEHICLE"</span>,
+  <span class="prop">"description"</span>: <span class="str">"Toyota Hilux 2022"</span>,
+  <span class="prop">"owner"</span>: <span class="str">"Customer"</span>,                 <span class="cm">// optional</span>
+  <span class="prop">"estimatedValue"</span>: <span class="num">18000000</span>,        <span class="cm">// optional</span>
+  <span class="prop">"status"</span>: <span class="str">"ACCEPTED"</span>              <span class="cm">// PROPOSED | ACCEPTED | RELEASED | REALIZED</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/loans/collateral/:collateralId/valuations</span>
+      <span class="endpoint-desc">Add collateral valuation</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"marketValue"</span>: <span class="num">17500000</span>,
+  <span class="prop">"forcedSaleValue"</span>: <span class="num">14000000</span>,       <span class="cm">// optional</span>
+  <span class="prop">"valuationType"</span>: <span class="str">"REVALUATION"</span>,    <span class="cm">// INITIAL | PERIODIC | REVALUATION | FORCED_SALE</span>
+  <span class="prop">"valuedBy"</span>: <span class="str">"valuer-id-001"</span>,       <span class="cm">// optional</span>
+  <span class="prop">"valuationDate"</span>: <span class="str">"2026-05-08"</span>      <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/loans/:id/restructures</span>
+      <span class="endpoint-desc">Get restructuring/rescheduling history</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/loans/:id/restructure</span>
+      <span class="endpoint-desc">Restructure or reschedule an active/defaulted loan</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"type"</span>: <span class="str">"RESCHEDULE"</span>,              <span class="cm">// RESTRUCTURE | RESCHEDULE</span>
+  <span class="prop">"newTenorDays"</span>: <span class="num">180</span>,
+  <span class="prop">"newInterestRate"</span>: <span class="num">6.5</span>,
+  <span class="prop">"newRepaymentFrequency"</span>: <span class="str">"MONTHLY"</span>,
+  <span class="prop">"reason"</span>: <span class="str">"Customer cash-flow adjustment"</span>,
+  <span class="prop">"approvedBy"</span>: <span class="str">"officer-id-001"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/loans/:id/approve</span>
+      <span class="endpoint-desc">Approve a loan application — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"approvedAmount"</span>: <span class="num">1000000</span>,       <span class="cm">// optional — kobo, defaults to principalAmount</span>
+  <span class="prop">"approvedInterestRate"</span>: <span class="num">2.5</span>,     <span class="cm">// optional — overrides application rate</span>
+  <span class="prop">"approvedTenorDays"</span>: <span class="num">90</span>,          <span class="cm">// optional — overrides application tenor</span>
+  <span class="prop">"approvedBy"</span>: <span class="str">"officer-id-001"</span>   <span class="cm">// optional — actor identifier</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/loans/:id/reject</span>
+      <span class="endpoint-desc">Reject a loan application</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"reason"</span>: <span class="str">"Insufficient income documentation"</span>,
+  <span class="prop">"rejectedBy"</span>: <span class="str">"officer-id-001"</span>  <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/loans/:id/disburse</span>
+      <span class="endpoint-desc">Disburse an approved loan — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"disbursementAccountNumber"</span>: <span class="str">"0012345678"</span>  <span class="cm">// optional — overrides the account set on application</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/loans/:id/repay</span>
+      <span class="endpoint-desc">Record a loan repayment — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"amount"</span>: <span class="num">120000</span>,                          <span class="cm">// kobo, min 100</span>
+  <span class="prop">"sourceAccountNumber"</span>: <span class="str">"0012345678"</span>,  <span class="cm">// optional</span>
+  <span class="prop">"narration"</span>: <span class="str">"Monthly repayment"</span>          <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/loans/:id/write-off</span>
+      <span class="endpoint-desc">Write off a non-performing loan — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{ <span class="prop">"reason"</span>: <span class="str">"Unrecoverable — customer deceased"</span> }  <span class="cm">// optional</span></pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/loans/:id/undo-write-off</span>
+      <span class="endpoint-desc">Reverse a write-off and reactivate the loan — throttled 10/60 s</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/loans/:id/recover</span>
+      <span class="endpoint-desc">Post a recovery payment against a written-off loan — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"amount"</span>: <span class="num">250000</span>,                          <span class="cm">// kobo, min 100</span>
+  <span class="prop">"sourceAccountNumber"</span>: <span class="str">"0012345678"</span>,  <span class="cm">// optional</span>
+  <span class="prop">"narration"</span>: <span class="str">"Recovery from guarantor"</span>    <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/loans/:id/foreclose</span>
+      <span class="endpoint-desc">Force-close a loan by settling outstanding balance — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"settlementAmount"</span>: <span class="num">850000</span>,              <span class="cm">// optional — kobo</span>
+  <span class="prop">"sourceAccountNumber"</span>: <span class="str">"0012345678"</span>,  <span class="cm">// optional</span>
+  <span class="prop">"reason"</span>: <span class="str">"Collateral realisation"</span>        <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/loans/:id/waive-interest</span>
+      <span class="endpoint-desc">Waive accrued interest — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"amount"</span>: <span class="num">30000</span>,                   <span class="cm">// kobo</span>
+  <span class="prop">"reason"</span>: <span class="str">"Customer hardship relief"</span>  <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/loans/:id/collections-status</span>
+      <span class="endpoint-desc">Move a loan through the collections workflow</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"status"</span>: <span class="str">"IN_COLLECTIONS"</span>,       <span class="cm">// CURRENT | WATCHLIST | PROMISE_TO_PAY | IN_COLLECTIONS | LEGAL | RECOVERY | CLOSED</span>
+  <span class="prop">"note"</span>: <span class="str">"Customer promised payment Friday"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/loans/:id/waive-penalty</span>
+      <span class="endpoint-desc">Waive accrued penalty interest — throttled 10/60 s</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"amount"</span>: <span class="num">15000</span>,
+  <span class="prop">"reason"</span>: <span class="str">"Approved hardship concession"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <strong>Rate limiting.</strong> All write operations except <code>reject</code> are throttled at 10 requests per 60 seconds per API client. <code>reject</code> uses the global rate limit only.
+  </div>
+</section>
+
+<!-- ═══════════ CHARGES ═══════════ -->
+<section id="charges">
+  <h2><span class="icon">◈</span>Charges &amp; Taxes</h2>
+  <p>The charges engine applies configurable fees and statutory taxes to account movements. Definitions can be global or narrowed by product, account type, transaction type, payment type, loan event, and currency.</p>
+
+  <h3>Supported Charge Models</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Model</th><th>How It Calculates</th><th>Typical Use</th></tr></thead>
+      <tbody>
+        <tr><td><code>FLAT</code></td><td>Uses a fixed <code>amount</code></td><td>Stamp duty, fixed service fee</td></tr>
+        <tr><td><code>PERCENTAGE</code></td><td><code>amount × rate / 100</code></td><td>Ad valorem transfer or loan fee</td></tr>
+        <tr><td><code>TIERED</code></td><td>Selects the matching tier by transaction amount</td><td>Band-based tariffs</td></tr>
+        <tr><td><code>CAPPED</code></td><td>Percentage or flat calculation limited by <code>capAmount</code></td><td>Percentage fee with maximum charge</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Tax Support</h3>
+  <p>Tax definitions use <code>category: "TAX"</code> and <code>taxType</code> values of <code>VAT</code>, <code>WHT</code>, <code>STAMP_DUTY</code>, or <code>GENERAL</code>. Fee definitions use <code>category: "FEE"</code>. Fees post with <code>FEE_CHARGE</code>; taxes post with <code>TAX_CHARGE</code>, so posting rules can route specific <code>feeType</code> or <code>taxType</code> values to separate GL accounts.</p>
+
+  <h3>Where Charges Apply</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Flow</th><th>Context</th><th>Balance Effect</th></tr></thead>
+      <tbody>
+        <tr><td>Transfers</td><td><code>transactionType=TRANSFER</code></td><td>Source account pays amount plus charges</td></tr>
+        <tr><td>Debits</td><td><code>transactionType=DEBIT</code></td><td>Account pays debit amount plus charges</td></tr>
+        <tr><td>Credits</td><td><code>transactionType=CREDIT</code></td><td>Account receives the inflow, then pays configured charges</td></tr>
+        <tr><td>Payments</td><td><code>paymentType=INTERNAL_TRANSFER</code></td><td>Underlying transfer carries the payment charge context</td></tr>
+        <tr><td>Loans</td><td><code>loanEvent</code> such as <code>DISBURSEMENT_CREDIT</code>, <code>REPAYMENT</code>, <code>RECOVERY</code>, or <code>FORECLOSURE</code></td><td>Loan account movements can carry loan-specific charges</td></tr>
+        <tr><td>Fixed deposits</td><td><code>transactionType=FIXED_DEPOSIT_CLOSURE</code></td><td>Premature closure can combine configured closure charges with the existing penalty</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Waivers, Exemptions, and Reversals</h3>
+  <p>Waivers can target a specific charge definition, charge code, tax type, customer, account, product, or transaction type. Waived charges are still recorded in <code>charge_applications</code> with status <code>WAIVED</code> for audit. Applied charges can be reversed through a compensating journal; the original application is marked <code>REVERSED</code>.</p>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/charges/definitions</span>
+      <span class="endpoint-desc">Create a fee or tax definition</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"chargeCode"</span>: <span class="str">"TRF_PERCENT_CAPPED"</span>,
+  <span class="prop">"name"</span>: <span class="str">"Transfer fee"</span>,
+  <span class="prop">"category"</span>: <span class="str">"FEE"</span>,
+  <span class="prop">"calculationType"</span>: <span class="str">"CAPPED"</span>,
+  <span class="prop">"rate"</span>: <span class="num">0.5</span>,
+  <span class="prop">"capAmount"</span>: <span class="num">50000</span>,
+  <span class="prop">"currency"</span>: <span class="str">"NGN"</span>,
+  <span class="prop">"transactionType"</span>: <span class="str">"TRANSFER"</span>,
+  <span class="prop">"effectiveFrom"</span>: <span class="str">"2026-01-01"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/charges/waivers</span>
+      <span class="endpoint-desc">Create a waiver or exemption</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"waiverCode"</span>: <span class="str">"VIP_TRF_WAIVER"</span>,
+  <span class="prop">"name"</span>: <span class="str">"VIP transfer fee waiver"</span>,
+  <span class="prop">"chargeCode"</span>: <span class="str">"TRF_PERCENT_CAPPED"</span>,
+  <span class="prop">"customerId"</span>: <span class="num">42</span>,
+  <span class="prop">"effectiveFrom"</span>: <span class="str">"2026-01-01"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/charges/applications/:id/reverse</span>
+      <span class="endpoint-desc">Reverse an applied fee or tax</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ RECONCILIATION ═══════════ -->
+<section id="reconciliation">
+  <h2><span class="icon">◈</span>Reconciliation</h2>
+  <p>Reconciliation is a first-class operational workflow. Each run is persisted in <code>reconciliation_runs</code>, and every mismatch is persisted in <code>reconciliation_exceptions</code> with assignment, status, and resolution notes.</p>
+
+  <h3>Run Types</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Type</th><th>Check</th><th>Exception Types</th></tr></thead>
+      <tbody>
+        <tr><td><code>FULL</code></td><td>Runs every available check</td><td>All exception types below</td></tr>
+        <tr><td><code>ACCOUNT_GL</code></td><td>Compares active account ledger balances with <code>2000</code> Customer Deposits GL</td><td><code>ACCOUNT_GL_MISMATCH</code></td></tr>
+        <tr><td><code>TRANSACTION_LEDGER</code></td><td>Finds successful transactions with no linked posted journal</td><td><code>TRANSACTION_LEDGER_MISSING</code></td></tr>
+        <tr><td><code>PAYMENT_SETTLEMENT</code></td><td>Finds successful payments missing processor references, matching transactions, or linked journals</td><td><code>PAYMENT_PROCESSOR_MISSING</code>, <code>PAYMENT_TRANSACTION_MISSING</code>, <code>PAYMENT_LEDGER_MISSING</code></td></tr>
+        <tr><td><code>LOAN_GL</code></td><td>Compares active/defaulted loan outstanding balances with <code>1100</code> Loan Receivables GL</td><td><code>LOAN_GL_MISMATCH</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Exception Lifecycle</h3>
+  <p>Exceptions start as <code>OPEN</code>. Operations users can assign them, move them through review, and close them as <code>RESOLVED</code> or <code>WAIVED</code>. Resolution captures <code>resolvedBy</code>, <code>resolutionNotes</code>, and <code>resolvedAt</code>.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>OPEN</code></td><td>New mismatch awaiting triage</td></tr>
+        <tr><td><code>ASSIGNED</code></td><td>Owned by an operator or team</td></tr>
+        <tr><td><code>IN_REVIEW</code></td><td>Being investigated outside the automated run</td></tr>
+        <tr><td><code>RESOLVED</code></td><td>Root cause corrected and documented</td></tr>
+        <tr><td><code>WAIVED</code></td><td>Accepted exception with documented rationale</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/reconciliation/runs</span>
+      <span class="endpoint-desc">Run reconciliation</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"type"</span>: <span class="str">"FULL"</span>,
+  <span class="prop">"businessDate"</span>: <span class="str">"2026-05-06"</span>,
+  <span class="prop">"initiatedBy"</span>: <span class="str">"ops@bank.example"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reconciliation/runs</span>
+      <span class="endpoint-desc">List reconciliation runs</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code>, <code>type</code>, <code>status</code>, <code>businessDate</code>.</p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reconciliation/runs/:runRef</span>
+      <span class="endpoint-desc">Inspect a run and its exceptions</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reconciliation/exceptions</span>
+      <span class="endpoint-desc">List reconciliation exceptions</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code>, <code>runRef</code>, <code>type</code>, <code>status</code>, <code>assignedTo</code>.</p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/reconciliation/exceptions/:id/assign</span>
+      <span class="endpoint-desc">Assign an exception</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"assignedTo"</span>: <span class="str">"ops-analyst-001"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/reconciliation/exceptions/:id/resolve</span>
+      <span class="endpoint-desc">Resolve or waive an exception</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"status"</span>: <span class="str">"RESOLVED"</span>,
+  <span class="prop">"resolvedBy"</span>: <span class="str">"ops@bank.example"</span>,
+  <span class="prop">"resolutionNotes"</span>: <span class="str">"Back-posted missing journal and verified balances."</span>
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ WEBHOOKS ═══════════ -->
+<section id="webhooks">
+  <h2><span class="icon">◈</span>Webhooks</h2>
+  <p>Webhook subscriptions are tenant-scoped B2B callbacks delivered from committed outbox events. If the database transaction rolls back, no outbox event exists and no webhook is created.</p>
+
+  <h3>Subscription Model</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>endpointUrl</code></td><td>HTTPS callback target for the tenant integration</td></tr>
+        <tr><td><code>eventTypes</code></td><td>Optional list such as <code>transaction.completed</code>, <code>loan.disbursed</code>, or <code>aml.alert_created</code></td></tr>
+        <tr><td><code>filters</code></td><td>Optional exact-match filters for aggregate/source fields or payload paths</td></tr>
+        <tr><td><code>signingSecret</code></td><td>Secret used for HMAC-SHA256 signatures. Generated when omitted.</td></tr>
+        <tr><td><code>payloadVersion</code></td><td>Version string included in delivery headers and body</td></tr>
+        <tr><td><code>maxAttempts</code> / <code>backoffBaseMs</code></td><td>Retry policy before a delivery enters <code>DEAD_LETTER</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Delivery Headers</h3>
+  <p>Every webhook is signed over <code>timestamp + "." + rawBody</code>. The receiver should reject old timestamps and verify the HMAC before processing.</p>
+  <pre>X-FuseCore-Event-Id: event uuid
+X-FuseCore-Delivery-Id: delivery reference
+X-FuseCore-Timestamp: unix timestamp seconds
+X-FuseCore-Signature: t=1778080000,v1=&lt;hmac-sha256&gt;
+X-FuseCore-Payload-Version: 2026-05-06
+X-FuseCore-Tenant: tenant_shortname</pre>
+
+  <h3>Payload Shape</h3>
+  <pre>{
+  <span class="prop">"id"</span>: <span class="str">"event-id"</span>,
+  <span class="prop">"type"</span>: <span class="str">"transaction.completed"</span>,
+  <span class="prop">"version"</span>: <span class="str">"2026-05-06"</span>,
+  <span class="prop">"tenant"</span>: <span class="str">"tenant_shortname"</span>,
+  <span class="prop">"aggregate"</span>: { <span class="prop">"type"</span>: <span class="str">"Transaction"</span>, <span class="prop">"id"</span>: <span class="str">"TXN-123"</span> },
+  <span class="prop">"source"</span>: { <span class="prop">"module"</span>: <span class="str">"transactions"</span>, <span class="prop">"reference"</span>: <span class="str">"TXN-123"</span> },
+  <span class="prop">"data"</span>: {},
+  <span class="prop">"metadata"</span>: {}
+}</pre>
+
+  <h3>Endpoints</h3>
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/webhooks/subscriptions</span>
+      <span class="endpoint-desc">Create webhook subscription</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"name"</span>: <span class="str">"Core events listener"</span>,
+  <span class="prop">"endpointUrl"</span>: <span class="str">"https://example.com/fusecore/webhooks"</span>,
+  <span class="prop">"eventTypes"</span>: [<span class="str">"transaction.completed"</span>, <span class="str">"loan.disbursed"</span>],
+  <span class="prop">"filters"</span>: {
+    <span class="prop">"sourceModule"</span>: <span class="str">"transactions"</span>,
+    <span class="prop">"payload"</span>: { <span class="prop">"currency"</span>: <span class="str">"NGN"</span> }
+  },
+  <span class="prop">"payloadVersion"</span>: <span class="str">"2026-05-06"</span>,
+  <span class="prop">"maxAttempts"</span>: <span class="num">5</span>,
+  <span class="prop">"backoffBaseMs"</span>: <span class="num">2000</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint"><div class="endpoint-header"><span class="method GET">GET</span><span class="endpoint-path">/api/v1/webhooks/subscriptions</span><span class="endpoint-desc">List subscriptions</span></div></div>
+  <div class="endpoint"><div class="endpoint-header"><span class="method PATCH">PATCH</span><span class="endpoint-path">/api/v1/webhooks/subscriptions/:id</span><span class="endpoint-desc">Update endpoint, filters, retry policy, or status</span></div></div>
+  <div class="endpoint"><div class="endpoint-header"><span class="method GET">GET</span><span class="endpoint-path">/api/v1/webhooks/deliveries</span><span class="endpoint-desc">List delivery logs by status, event, or subscription</span></div></div>
+  <div class="endpoint"><div class="endpoint-header"><span class="method POST">POST</span><span class="endpoint-path">/api/v1/webhooks/deliveries/:id/replay</span><span class="endpoint-desc">Reset a failed or dead-letter delivery to PENDING</span></div></div>
+
+  <p>Postman documentation is in <code>docs/fusecore.postman_collection.json</code>. A focused OpenAPI document is available at <code>docs/webhooks.openapi.json</code>.</p>
+</section>
+
+<!-- ═══════════ LEDGER ═══════════ -->
+<section id="ledger">
+  <h2><span class="icon">◈</span>Ledger</h2>
+  <p>A double-entry General Ledger (GL). Every financial movement in FuseCore produces an immutable posted journal batch with explicit debit and credit lines, so the books are always mathematically provable.</p>
+
+  <h3>Double-Entry Accounting — the Concept</h3>
+  <p style="color:var(--muted);line-height:1.8">The foundational rule of accounting is the <strong>accounting equation</strong>:</p>
+  <pre style="margin:10px 0 18px">Assets = Liabilities + Equity</pre>
+  <p style="color:var(--muted);line-height:1.8">Every transaction changes at least two accounts but leaves the equation balanced. The direction of the change depends on the <em>normal balance</em> of each account type:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Account Type</th><th>Normal Balance</th><th>Increased By</th><th>Decreased By</th></tr></thead>
+      <tbody>
+        <tr><td>Asset</td><td>Debit</td><td>Debit</td><td>Credit</td></tr>
+        <tr><td>Liability</td><td>Credit</td><td>Credit</td><td>Debit</td></tr>
+        <tr><td>Equity</td><td>Credit</td><td>Credit</td><td>Debit</td></tr>
+        <tr><td>Revenue / Income</td><td>Credit</td><td>Credit</td><td>Debit</td></tr>
+        <tr><td>Expense</td><td>Debit</td><td>Debit</td><td>Credit</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--muted);line-height:1.8;margin-top:14px">A <strong>Trial Balance</strong> is the periodic proof that this holds: the sum of all debit-side balances must exactly equal the sum of all credit-side balances. If they differ, a posting was made incorrectly.</p>
+
+  <h3>Journal Posting Model</h3>
+  <p style="color:var(--muted);line-height:1.8">FuseCore stores accounting records in <code>journal_batches</code> and <code>journal_lines</code>. A batch/header carries the journal reference, posting date, value date, accounting period, source module, and source reference. Lines carry the GL account, side (<code>DEBIT</code> or <code>CREDIT</code>), amount, currency, and narration.</p>
+  <p style="color:var(--muted);line-height:1.8">Posted journals must balance before they are saved. Once posted, monetary lines are immutable. Mistakes are corrected by posting a compensating reversal journal through <code>/ledger/entries/reverse</code>; the original journal remains intact for audit.</p>
+
+  <h3>How FuseCore Posts Journals</h3>
+  <p style="color:var(--muted);line-height:1.8">Every financial operation (credit, debit, transfer, loan disbursement, repayment, write-off, recovery, foreclosure, charges/taxes, and fixed-deposit penalty) calls <code>ledgerService.autoPost()</code> internally. The call accepts the same <code>EntityManager</code> used by the balance-update transaction, making the journal write <strong>atomic</strong> with the account balance change — if either fails, both roll back.</p>
+  <p style="color:var(--muted);line-height:1.8">The five system GL accounts are auto-provisioned on first use. Here is how each operation maps to journal lines:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Operation</th><th>Debit</th><th>Credit</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Customer credit (deposit / inflow)</td><td><code>1000</code> Cash</td><td><code>2000</code> Customer Deposits</td><td>Cash asset rises; we owe more to the customer (liability up)</td></tr>
+        <tr><td>Customer debit (withdrawal / outflow)</td><td><code>2000</code> Customer Deposits</td><td><code>1000</code> Cash</td><td>Obligation to customer falls; cash leaves</td></tr>
+        <tr><td>Internal transfer</td><td><code>2000</code> Customer Deposits (sender)</td><td><code>2000</code> Customer Deposits (receiver)</td><td>Net liability unchanged; ownership moves between accounts</td></tr>
+        <tr><td>Loan disbursement</td><td><code>1100</code> Loan Receivable</td><td><code>1000</code> Cash</td><td>We are now owed money (asset up); cash goes out</td></tr>
+        <tr><td>Loan principal repayment</td><td><code>1000</code> Cash</td><td><code>1100</code> Loan Receivable</td><td>Cash comes back in; receivable reduces</td></tr>
+        <tr><td>Interest / income collected</td><td><code>1000</code> Cash</td><td><code>4000</code> Loan Interest Income</td><td>Cash in; income recognised</td></tr>
+        <tr><td>Fee charge</td><td><code>2000</code> Customer Deposits</td><td><code>4100</code> Fee Income</td><td>Customer liability falls; fee income is recognised</td></tr>
+        <tr><td>Tax charge</td><td><code>2000</code> Customer Deposits</td><td><code>2100</code> Tax Payable</td><td>Customer liability falls; statutory payable is recognised</td></tr>
+        <tr><td>Fixed-deposit premature penalty</td><td><code>2000</code> Customer Deposits</td><td><code>4100</code> Fee Income</td><td>Customer liability falls; fee income is recognised</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout info" style="margin-top:18px">
+    <strong>No manual posting required for normal operations.</strong> <code>autoPost()</code> is called automatically by the transactions, payments, loans, charges, and account services. The manual posting endpoint below is for adjusting entries and one-off corrections only (e.g. accrual adjustments, reconciliation fixes).
+  </div>
+
+  <h3>System GL Accounts</h3>
+  <p style="color:var(--muted);line-height:1.8">The chart of accounts is hierarchical. Header accounts group the tree and have <code>allowPosting=false</code>; journal lines post only to leaf accounts. Use <code>GET /api/v1/ledger/gl-accounts/tree</code> to retrieve the full chart.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>GL Code</th><th>Name</th><th>Type</th><th>Normal Side</th></tr></thead>
+      <tbody>
+        <tr><td><code>1000</code></td><td>Cash and Cash Equivalents</td><td>ASSET</td><td>Debit</td></tr>
+        <tr><td><code>1100</code></td><td>Loan Receivables</td><td>ASSET</td><td>Debit</td></tr>
+        <tr><td><code>2000</code></td><td>Customer Deposits</td><td>LIABILITY</td><td>Credit</td></tr>
+        <tr><td><code>2100</code></td><td>Tax Payable</td><td>LIABILITY</td><td>Credit</td></tr>
+        <tr><td><code>4000</code></td><td>Loan Interest Income</td><td>REVENUE</td><td>Credit</td></tr>
+        <tr><td><code>4100</code></td><td>Fee Income</td><td>REVENUE</td><td>Credit</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--muted);line-height:1.8;margin-top:10px">Additional GL accounts (fee income, provisions, expenses, etc.) can be created via the API and used in manual journal entries. The five account types supported are: <code>ASSET</code>, <code>LIABILITY</code>, <code>EQUITY</code>, <code>REVENUE</code>, <code>EXPENSE</code>.</p>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/ledger/gl-accounts</span>
+      <span class="endpoint-desc">Create a GL account</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"glCode"</span>: <span class="str">"7000"</span>,
+  <span class="prop">"name"</span>: <span class="str">"Fee Income"</span>,
+  <span class="prop">"type"</span>: <span class="str">"REVENUE"</span>,        <span class="cm">// ASSET | LIABILITY | EQUITY | REVENUE | EXPENSE</span>
+  <span class="prop">"description"</span>: <span class="str">"Fee income account"</span>,  <span class="cm">// optional</span>
+  <span class="prop">"currency"</span>: <span class="str">"NGN"</span>,        <span class="cm">// optional</span>
+  <span class="prop">"parentGlCode"</span>: <span class="str">"7000"</span>    <span class="cm">// optional — for hierarchical GL structures</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/ledger/gl-accounts/tree</span>
+      <span class="endpoint-desc">Get hierarchical chart of accounts</span>
+    </div>
+  </div>
+
+  <h3>Configurable Posting Rules</h3>
+  <p style="color:var(--muted);line-height:1.8">FuseCore resolves system postings from active, versioned rules in <code>accounting_posting_rules</code>. Rules can be specialized by product, transaction type, currency, fee type, tax type, and loan event. New rules are saved as <code>DRAFT</code>, validated against active postable GL accounts, then activated.</p>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/ledger/posting-rules</span>
+      <span class="endpoint-desc">Create a draft posting rule</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"event"</span>: <span class="str">"FEE_CHARGE"</span>,
+  <span class="prop">"currency"</span>: <span class="str">"NGN"</span>,
+  <span class="prop">"feeType"</span>: <span class="str">"MAINTENANCE"</span>,
+  <span class="prop">"debitGlCode"</span>: <span class="str">"2000"</span>,
+  <span class="prop">"creditGlCode"</span>: <span class="str">"4100"</span>,
+  <span class="prop">"priority"</span>: <span class="num">50</span>,
+  <span class="prop">"effectiveFrom"</span>: <span class="str">"2026-05-01"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/ledger/posting-rules</span>
+      <span class="endpoint-desc">List posting rules</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>event</code>, <code>status</code>, <code>currency</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/ledger/posting-rules/:id/validate</span>
+      <span class="endpoint-desc">Validate a posting rule before activation</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/ledger/posting-rules/:id/activate</span>
+      <span class="endpoint-desc">Activate a validated posting rule</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/ledger/gl-accounts</span>
+      <span class="endpoint-desc">List all GL accounts</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/ledger/gl-accounts/:glCode/balance</span>
+      <span class="endpoint-desc">Get GL account balance</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/ledger/trial-balance</span>
+      <span class="endpoint-desc">Get trial balance report</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/ledger/entries</span>
+      <span class="endpoint-desc">Post a two-line compatibility journal</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"debitGlCode"</span>: <span class="str">"1000"</span>,
+  <span class="prop">"creditGlCode"</span>: <span class="str">"7000"</span>,
+  <span class="prop">"amount"</span>: <span class="num">5000</span>,             <span class="cm">// kobo</span>
+  <span class="prop">"narration"</span>: <span class="str">"Monthly interest accrual"</span>,  <span class="cm">// optional</span>
+  <span class="prop">"postingDate"</span>: <span class="str">"2026-04-30"</span>,   <span class="cm">// optional</span>
+  <span class="prop">"valueDate"</span>: <span class="str">"2026-04-30"</span>,     <span class="cm">// optional</span>
+  <span class="prop">"accountingPeriod"</span>: <span class="str">"2026-04"</span>, <span class="cm">// optional</span>
+  <span class="prop">"sourceModule"</span>: <span class="str">"ledger"</span>,      <span class="cm">// optional</span>
+  <span class="prop">"sourceReference"</span>: <span class="str">"ADJ-001"</span>,  <span class="cm">// optional</span>
+  <span class="prop">"transactionRef"</span>: <span class="str">"INT-2026-04"</span>,  <span class="cm">// optional — links entry to a transaction</span>
+  <span class="prop">"paymentRef"</span>: <span class="str">"PAY-001"</span>,           <span class="cm">// optional — links entry to a payment</span>
+  <span class="prop">"loanRef"</span>: <span class="str">"LN-001"</span>               <span class="cm">// optional — links entry to a loan</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/ledger/journals</span>
+      <span class="endpoint-desc">Post a multi-line journal</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"narration"</span>: <span class="str">"Month-end adjustment"</span>,
+  <span class="prop">"postingDate"</span>: <span class="str">"2026-04-30"</span>,
+  <span class="prop">"valueDate"</span>: <span class="str">"2026-04-30"</span>,
+  <span class="prop">"accountingPeriod"</span>: <span class="str">"2026-04"</span>,
+  <span class="prop">"sourceModule"</span>: <span class="str">"ledger"</span>,
+  <span class="prop">"sourceReference"</span>: <span class="str">"MEND-2026-04"</span>,
+  <span class="prop">"lines"</span>: [
+    { <span class="prop">"glCode"</span>: <span class="str">"1000"</span>, <span class="prop">"side"</span>: <span class="str">"DEBIT"</span>, <span class="prop">"amount"</span>: <span class="num">5000</span> },
+    { <span class="prop">"glCode"</span>: <span class="str">"4000"</span>, <span class="prop">"side"</span>: <span class="str">"CREDIT"</span>, <span class="prop">"amount"</span>: <span class="num">3000</span> },
+    { <span class="prop">"glCode"</span>: <span class="str">"4100"</span>, <span class="prop">"side"</span>: <span class="str">"CREDIT"</span>, <span class="prop">"amount"</span>: <span class="num">2000</span> }
+  ]
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/ledger/entries/reverse</span>
+      <span class="endpoint-desc">Reverse a posted GL entry</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"entryRef"</span>: <span class="str">"JRN-20260401-abc123"</span>,  <span class="cm">// the journalRef returned when posted</span>
+  <span class="prop">"reason"</span>: <span class="str">"Posted in error"</span>          <span class="cm">// optional</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/ledger/entries</span>
+      <span class="endpoint-desc">List journal batches (paginated)</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code>, <code>glCode</code>, <code>transactionRef</code>, <code>sourceModule</code>, <code>sourceReference</code>, <code>accountingPeriod</code>, <code>fromDate</code>, <code>toDate</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/ledger/entries/:ref</span>
+      <span class="endpoint-desc">Get journal batch by reference</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ PRODUCTS ═══════════ -->
+<section id="products">
+  <h2><span class="icon">◈</span>Products</h2>
+  <p>Product catalog defines account and loan behavior through versioned configurations, effective dates, approval workflow, eligibility rules, transaction-limit rules, interest rules, and fee attachments.</p>
+
+  <h3>Rules Engine Coverage</h3>
+  <ul style="color:var(--muted);line-height:2">
+    <li><strong>Already present before this upgrade:</strong> one product row per product code with type, interest rate, balance limits, daily transaction limit, overdraft settings, currency, status, and free-form config. Charges could already target products by ID, code, or type.</li>
+    <li><strong>Added:</strong> versioned product snapshots, eligibility rules, KYC/risk/product transaction limits, interest calculation rules, fee attachments, approval workflow, effective dates, and account migration behavior.</li>
+  </ul>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/products</span>
+      <span class="endpoint-desc">Create a product</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"productCode"</span>: <span class="str">"SAV001"</span>,
+  <span class="prop">"name"</span>: <span class="str">"Standard Savings"</span>,
+  <span class="prop">"type"</span>: <span class="str">"SAVINGS"</span>,              <span class="cm">// SAVINGS | CURRENT | FIXED_DEPOSIT | DOMICILIARY | LOAN</span>
+  <span class="prop">"description"</span>: <span class="str">"Basic savings account"</span>,  <span class="cm">// optional</span>
+  <span class="prop">"interestRate"</span>: <span class="num">4.5</span>,              <span class="cm">// optional — percent</span>
+  <span class="prop">"minBalance"</span>: <span class="num">50000</span>,              <span class="cm">// optional — kobo</span>
+  <span class="prop">"maxBalance"</span>: <span class="num">100000000</span>,          <span class="cm">// optional — kobo</span>
+  <span class="prop">"dailyTransactionLimit"</span>: <span class="num">5000000</span>,  <span class="cm">// optional — kobo</span>
+  <span class="prop">"currency"</span>: <span class="str">"NGN"</span>,                <span class="cm">// optional — NGN | USD | GBP | EUR</span>
+  <span class="prop">"allowOverdraft"</span>: <span class="num">false</span>,           <span class="cm">// optional</span>
+  <span class="prop">"overdraftLimit"</span>: <span class="num">0</span>               <span class="cm">// optional — kobo</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/products</span>
+      <span class="endpoint-desc">List products (paginated)</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code>, <code>type</code>, <code>status</code> (<code>ACTIVE</code> | <code>INACTIVE</code>)</p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/products/:id</span>
+      <span class="endpoint-desc">Get product by ID</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PUT">PUT</span>
+      <span class="endpoint-path">/api/v1/products/:id</span>
+      <span class="endpoint-desc">Update product parameters (all fields optional, productCode is immutable)</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/products/:id/status</span>
+      <span class="endpoint-desc">Activate or deactivate a product</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{ <span class="prop">"status"</span>: <span class="str">"INACTIVE"</span> }  <span class="cm">// ACTIVE | INACTIVE</span></pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/products/:id/versions</span>
+      <span class="endpoint-desc">List product versions</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>status</code> (<code>DRAFT</code> | <code>PENDING_APPROVAL</code> | <code>APPROVED</code> | <code>ACTIVE</code> | <code>REJECTED</code> | <code>RETIRED</code>)</p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/products/:id/versions</span>
+      <span class="endpoint-desc">Create a draft product version with rules</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"name"</span>: <span class="str">"Standard Savings v2"</span>,
+  <span class="prop">"effectiveFrom"</span>: <span class="str">"2026-06-01"</span>,
+  <span class="prop">"migrationMode"</span>: <span class="str">"UPDATE_EXISTING_ACCOUNTS"</span>, <span class="cm">// NEW_ACCOUNTS_ONLY | UPDATE_EXISTING_ACCOUNTS</span>
+  <span class="prop">"interestRate"</span>: <span class="num">5.0</span>,
+  <span class="prop">"dailyTransactionLimit"</span>: <span class="num">7500000</span>,
+  <span class="prop">"rules"</span>: [
+    {
+      <span class="prop">"ruleType"</span>: <span class="str">"ELIGIBILITY"</span>,
+      <span class="prop">"ruleCode"</span>: <span class="str">"SAV-KYC-TIER2"</span>,
+      <span class="prop">"conditions"</span>: { <span class="prop">"kycLevels"</span>: [<span class="str">"TIER_2"</span>, <span class="str">"TIER_3"</span>] },
+      <span class="prop">"outcome"</span>: { <span class="prop">"eligible"</span>: <span class="num">true</span> }
+    },
+    {
+      <span class="prop">"ruleType"</span>: <span class="str">"TRANSACTION_LIMIT"</span>,
+      <span class="prop">"ruleCode"</span>: <span class="str">"SAV-HIGH-RISK-LIMIT"</span>,
+      <span class="prop">"priority"</span>: <span class="num">10</span>,
+      <span class="prop">"conditions"</span>: { <span class="prop">"riskRatings"</span>: [<span class="str">"HIGH"</span>, <span class="str">"VERY_HIGH"</span>] },
+      <span class="prop">"outcome"</span>: { <span class="prop">"dailyLimit"</span>: <span class="num">1000000</span> }
+    }
+  ]
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/products/versions/:versionId/submit</span>
+      <span class="endpoint-desc">Submit a draft version for approval</span>
+    </div>
+    <div class="endpoint-body"><pre>{ <span class="prop">"submittedBy"</span>: <span class="str">"product-manager-001"</span> }</pre></div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/products/versions/:versionId/approve</span>
+      <span class="endpoint-desc">Approve a pending version and optionally activate it</span>
+    </div>
+    <div class="endpoint-body"><pre>{ <span class="prop">"approvedBy"</span>: <span class="str">"approver-001"</span>, <span class="prop">"activateNow"</span>: <span class="num">true</span> }</pre></div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/products/versions/:versionId/reject</span>
+      <span class="endpoint-desc">Reject a pending version</span>
+    </div>
+    <div class="endpoint-body"><pre>{ <span class="prop">"reason"</span>: <span class="str">"Pricing committee declined rate change"</span> }</pre></div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/products/versions/:versionId/activate</span>
+      <span class="endpoint-desc">Activate an approved version and run migration behavior</span>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/products/versions/:versionId/fees</span>
+      <span class="endpoint-desc">Attach a charge definition to a product version</span>
+    </div>
+    <div class="endpoint-body"><pre>{ <span class="prop">"chargeDefinitionId"</span>: <span class="num">12</span>, <span class="prop">"priority"</span>: <span class="num">20</span> }</pre></div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/products/:id/evaluate-eligibility</span>
+      <span class="endpoint-desc">Evaluate customer eligibility for a product</span>
+    </div>
+    <div class="endpoint-body"><pre>{ <span class="prop">"customerId"</span>: <span class="num">1</span>, <span class="prop">"openingBalance"</span>: <span class="num">50000</span> }</pre></div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/products/:id/resolve-transaction-limit</span>
+      <span class="endpoint-desc">Resolve transaction limits by KYC tier and risk rating</span>
+    </div>
+    <div class="endpoint-body"><pre>{ <span class="prop">"customerId"</span>: <span class="num">1</span>, <span class="prop">"kycLevel"</span>: <span class="str">"TIER_3"</span>, <span class="prop">"riskRating"</span>: <span class="str">"LOW"</span>, <span class="prop">"transactionType"</span>: <span class="str">"DEBIT"</span> }</pre></div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/products/:id/calculate-interest</span>
+      <span class="endpoint-desc">Calculate product interest using configured or supplied rule</span>
+    </div>
+    <div class="endpoint-body"><pre>{ <span class="prop">"principal"</span>: <span class="num">1000000</span>, <span class="prop">"days"</span>: <span class="num">90</span>, <span class="prop">"method"</span>: <span class="str">"SIMPLE"</span> }</pre></div>
+  </div>
+</section>
+
+<!-- ═══════════ REPORTING ═══════════ -->
+<section id="reporting">
+  <h2><span class="icon">◈</span>Reporting Exports</h2>
+  <p>Reporting APIs generate operational and financial extracts directly from tenant data. All endpoints require <code>reporting:read</code> and support <code>format=json</code> or <code>format=csv</code>. Every export writes an <code>audit_logs</code> row with report type, filters, row count, request ID, API key prefix, IP address, and user agent.</p>
+
+  <div class="callout info">
+    <strong>Export shape.</strong> JSON exports return structured rows plus summary totals. CSV exports return generated CSV content in the response payload with <code>contentType=text/csv</code> and a suggested filename. CBN return templates are the canonical standard for Nigerian regulatory exports and should be implemented as dedicated adapters. Generic exports include <code>regulatorSubmissionReady=false</code> and a compliance notice because they are not CBN monthly returns masterfile workbooks, NFIU goAML XML files, RapidAML filings, or other regulator submission formats.
+  </div>
+
+  <div class="callout info">
+    <strong>CBN adapter.</strong> <code>GET /reporting/cbn/monthly-returns?period=YYYY-MM&amp;format=json|xlsx</code> generates CBN monthly-return-oriented sections for trial balance, balance sheet, income statement, deposits, loan portfolio, transactions, and reconciliation. The response includes official CBN template metadata plus readiness flags; final regulator submission still requires validation against the current protected CBN Masterfile workbook.
+  </div>
+
+  <div class="callout warning">
+    <strong>AML confidentiality.</strong> The reporting AML endpoint returns aggregate metrics only. Detailed alert, SAR, customer, transaction, regulator reference, narrative, and case-handler data belongs in the AML compliance APIs and should be restricted to AML-specific scopes.
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reporting/account-statements</span>
+      <span class="endpoint-desc">Export account statements</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>accountNumber</code>, <code>accountId</code>, <code>fromDate</code>, <code>toDate</code>, <code>format=json|csv</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reporting/gl</span>
+      <span class="endpoint-desc">Export GL journal-line detail</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>glCode</code>, <code>fromDate</code>, <code>toDate</code>, <code>format=json|csv</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reporting/trial-balance</span>
+      <span class="endpoint-desc">Export trial balance for a date range</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>fromDate</code>, <code>toDate</code>, <code>format=json|csv</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reporting/balance-sheet</span>
+      <span class="endpoint-desc">Export balance sheet</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>asOfDate</code>, <code>format=json|csv</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reporting/profit-and-loss</span>
+      <span class="endpoint-desc">Export P&amp;L</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>fromDate</code>, <code>toDate</code>, <code>format=json|csv</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reporting/transactions</span>
+      <span class="endpoint-desc">Export transaction reports</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>accountNumber</code>, <code>type</code>, <code>status</code>, <code>channel</code>, <code>fromDate</code>, <code>toDate</code>, <code>format=json|csv</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reporting/loan-portfolio</span>
+      <span class="endpoint-desc">Export loan portfolio, arrears, and provisioning</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>status</code>, <code>type</code>, <code>format=json|csv</code></p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reporting/aml</span>
+      <span class="endpoint-desc">Export aggregate AML or SAR metrics</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>reportKind=alerts|sar</code>, <code>status</code>, <code>fromDate</code>, <code>toDate</code>, <code>format=json|csv</code>. Response rows are grouped by date and status and contain counts/risk totals only.</p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/reporting/reconciliation</span>
+      <span class="endpoint-desc">Export reconciliation runs and exception summary</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>status</code>, <code>type</code>, <code>fromDate</code>, <code>toDate</code>, <code>format=json|csv</code></p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ AML ═══════════ -->
+<section id="aml">
+  <h2><span class="icon">◈</span>AML / Compliance</h2>
+  <p>Every transaction is evaluated asynchronously against the AML rules engine. Alerts are created for any triggered rule and routed to the compliance review queue.</p>
+
+  <h3>Nigerian Regulatory Context</h3>
+  <p style="color:var(--muted);line-height:1.8">Nigeria's AML/CFT framework is governed by three interlocking instruments:</p>
+  <ul style="color:var(--muted);padding-left:20px;line-height:2.2">
+    <li><strong>CBN AML/CFT Regulations 2022</strong> — the Central Bank of Nigeria's primary rulebook for banks and fintechs. Mandates Customer Due Diligence (CDD), risk-based transaction monitoring, and reporting obligations.</li>
+    <li><strong>Money Laundering (Prevention and Prohibition) Act 2022 (MLPPA)</strong> — the enabling legislation. Makes structuring, layering, and tipping-off criminal offences.</li>
+    <li><strong>NFIU Guidelines</strong> — the Nigerian Financial Intelligence Unit (Nigeria's national FIU, a member of the Egmont Group) sets specific thresholds and report formats. All STRs and CTRs are filed via NFIU's <em>goAML</em> platform.</li>
+  </ul>
+  <p style="color:var(--muted);line-height:1.8">Nigeria is also a FATF member country, so the 40 FATF Recommendations apply — in particular <strong>Recommendation 1</strong> (risk-based approach), which is why FuseCore applies tighter thresholds for VERY_HIGH risk-rated customers rather than a single fixed limit.</p>
+  <p style="color:var(--muted);line-height:1.8">Key mandatory obligations for financial institutions:</p>
+  <ul style="color:var(--muted);padding-left:20px;line-height:2.2">
+    <li><strong>Currency Transaction Reports (CTR)</strong> — any single cash transaction ≥ ₦5 M (individual) or ₦10 M (corporate) must be reported to NFIU within 24 hours.</li>
+    <li><strong>Suspicious Transaction Reports (STR)</strong> — any transaction suspected to be proceeds of crime must be reported within 3 working days. The goAML reference number is stored in <code>regulatorRef</code> on the SAR.</li>
+    <li><strong>Tipping-off prohibition</strong> — disclosing to a subject that they are under STR investigation is a criminal offence (CBN AML/CFT Regulations 2022, Reg. 15). The AML endpoints must never be exposed to customer-facing systems.</li>
+    <li><strong>Record retention</strong> — transaction records and compliance reports must be kept for a minimum of 5 years.</li>
+  </ul>
+
+  <h3>AML Rules Engine</h3>
+  <p style="color:var(--muted);line-height:1.8">Six rules run in parallel on every transaction. If any rule triggers, a composite risk score is computed and an alert is created. The score starts at 25 (LOW), 50 (MEDIUM), or 75 (HIGH) based on the worst triggered severity, and rises by 5 for each additional triggered rule, capped at 100.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Rule Code</th><th>Severity</th><th>Trigger Logic</th><th>Regulatory Basis</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>CTR_THRESHOLD</code></td><td>HIGH</td>
+          <td>Single transaction ≥ ₦5 M (individual) / ₦10 M (corporate) / ₦500 k (VERY_HIGH risk)</td>
+          <td>NFIU CTR reporting obligation; tighter threshold for high-risk is the FATF risk-based approach</td>
+        </tr>
+        <tr>
+          <td><code>STRUCTURING</code></td><td>HIGH</td>
+          <td>Rolling 24 h window sum is 90–100% of the applicable CTR threshold across ≥ 2 transactions</td>
+          <td>MLPPA 2022 criminalises structuring ("smurfing") — intentionally splitting amounts to evade reporting</td>
+        </tr>
+        <tr>
+          <td><code>VELOCITY</code></td><td>MEDIUM</td>
+          <td>Debit-only: &gt; 10 outflows in the last 60 min AND &gt; 5× the account's 30-day hourly average</td>
+          <td>Unusual outflow velocity is a key indicator of account takeover and mule account activity</td>
+        </tr>
+        <tr>
+          <td><code>ROUND_AMOUNT</code></td><td>LOW</td>
+          <td>Large transaction amount is an exact round number (e.g. ₦500,000.00 exactly)</td>
+          <td>Round amounts are a common laziness pattern in illicit transfers; legitimate payroll/supplier payments rarely land on exact round figures</td>
+        </tr>
+        <tr>
+          <td><code>DORMANT_REACTIVATION</code></td><td>MEDIUM</td>
+          <td>No transactions in the past 90 days, then a transaction of ≥ ₦1 M appears</td>
+          <td>CBN defines dormancy at 6 months; FuseCore flags earlier at 90 days. Sudden large activity on a dormant account is a layering red flag</td>
+        </tr>
+        <tr>
+          <td><code>HIGH_RISK_COUNTERPARTY</code></td><td>HIGH</td>
+          <td>Counterparty account or customer is on the internal high-risk watchlist (PEPs, sanctioned entities)</td>
+          <td>CBN CDD regulations require Enhanced Due Diligence for Politically Exposed Persons (PEPs) and sanctioned counterparties</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Alert Lifecycle</h3>
+  <p style="color:var(--muted);line-height:1.8">An alert is created with status <code>OPEN</code>. A compliance officer then resolves it (false positive → <code>CLOSED</code>) or escalates it (<code>ESCALATED</code>, immutable). Escalated alerts are candidates for a Suspicious Activity Report (SAR).</p>
+
+  <h3>SAR (Suspicious Activity Report) Lifecycle</h3>
+  <p style="color:var(--muted);line-height:1.8">A SAR groups one or more alerts against the same customer into a structured report for submission to NFIU via goAML. The lifecycle is <code>DRAFT</code> → <code>FILED</code> → <code>ACKNOWLEDGED</code>. Once filed, the <code>regulatorRef</code> field stores the goAML reference number. An acknowledged SAR is immutable.</p>
+
+  <div class="callout warn">
+    <strong>Tipping-off prohibition.</strong> These endpoints are for internal compliance use only. Never expose them to customer-facing systems or return their data in any customer-visible API response. Disclosing the existence of an STR/SAR to the subject is a criminal offence under CBN AML/CFT Regulations 2022, Reg. 15.
+  </div>
+
+  <h3>Alert Endpoints</h3>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/aml/alerts</span>
+      <span class="endpoint-desc">List AML alerts (paginated)</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code>, <code>status</code> (<code>OPEN</code> | <code>UNDER_REVIEW</code> | <code>CLOSED</code> | <code>ESCALATED</code>)</p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/aml/alerts/:id/resolve</span>
+      <span class="endpoint-desc">Close an alert as a false positive</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"resolvedBy"</span>: <span class="str">"compliance-officer-001"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/aml/alerts/:id/escalate</span>
+      <span class="endpoint-desc">Escalate an alert for SAR filing — makes it immutable</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"escalatedBy"</span>: <span class="str">"compliance-officer-001"</span>
+}</pre>
+    </div>
+  </div>
+
+  <h3>SAR Endpoints</h3>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/aml/sar</span>
+      <span class="endpoint-desc">Create a SAR draft from one or more escalated alerts (all must belong to the same customer)</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"alertIds"</span>: [<span class="num">12</span>, <span class="num">15</span>],
+  <span class="prop">"narrative"</span>: <span class="str">"Customer made 8 structured deposits totalling ₦4.8M across 3 days..."</span>,
+  <span class="prop">"periodStart"</span>: <span class="str">"2026-04-01"</span>,
+  <span class="prop">"periodEnd"</span>: <span class="str">"2026-04-03"</span>,
+  <span class="prop">"createdBy"</span>: <span class="str">"compliance-officer-001"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/api/v1/aml/sar/:id/file</span>
+      <span class="endpoint-desc">Mark a SAR as filed with NFIU and record the goAML reference</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"filedBy"</span>: <span class="str">"compliance-officer-001"</span>,
+  <span class="prop">"regulatorRef"</span>: <span class="str">"NFIU-2026-00412"</span>  <span class="cm">// goAML reference number</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/aml/sar</span>
+      <span class="endpoint-desc">List SARs (paginated)</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Query params: <code>page</code>, <code>limit</code>, <code>status</code> (<code>DRAFT</code> | <code>FILED</code> | <code>ACKNOWLEDGED</code>)</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ OBSERVABILITY ═══════════ -->
+<section id="observability">
+  <h2><span class="icon">◈</span>Observability</h2>
+  <p>FuseCore emits structured JSON logs from the API and worker processes. HTTP logs include <code>requestId</code>, tenant shortname, method, route, status code, duration, and client IP. Error logs include alert-ready fields such as error name, code, message, request ID, tenant, route, and stack for unhandled exceptions.</p>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/metrics</span>
+      <span class="endpoint-desc">Prometheus-compatible metrics</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Requires <code>metrics:read</code>. Returns text exposition metrics for HTTP request counts/durations, slow requests, slow SQL queries, BullMQ queue job counts, transactions, failed transactions, reconciliation runs, and AML alert counts.</p>
+      <pre>fusecore_http_requests_total{method="GET",route="/health",status_code="200",tenant="unknown"} 1
+fusecore_queue_jobs{queue="aml",state="failed"} 0
+fusecore_business_aml_alerts_total{tenant="fusion",status="OPEN"} 4</pre>
+    </div>
+  </div>
+
+  <div class="callout info">
+    Slow request and slow query thresholds are controlled by <code>SLOW_REQUEST_MS</code> and <code>SLOW_QUERY_MS</code>. Slow events are emitted as warning logs and exported as metrics so external monitoring can alert on them.
+  </div>
+</section>
+
+<!-- ═══════════ HEALTH ═══════════ -->
+<section id="health">
+  <h2><span class="icon">◈</span>Health</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/health</span>
+      <span class="endpoint-desc">Readiness check — no API key required</span>
+    </div>
+    <div class="endpoint-body">
+      <pre>{
+  <span class="prop">"status"</span>: <span class="str">"ok"</span>,
+  <span class="prop">"info"</span>: {
+    <span class="prop">"database"</span>: { <span class="prop">"status"</span>: <span class="str">"up"</span> },
+    <span class="prop">"redis"</span>: { <span class="prop">"status"</span>: <span class="str">"up"</span> },
+    <span class="prop">"queues"</span>: { <span class="prop">"status"</span>: <span class="str">"up"</span> }
+  }
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/health/live</span>
+      <span class="endpoint-desc">Process liveness check</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Returns process uptime and timestamp without checking dependencies.</p>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/health/ready</span>
+      <span class="endpoint-desc">Readiness check for DB, Redis, and queues</span>
+    </div>
+    <div class="endpoint-body">
+      <p>Use this endpoint for Kubernetes readiness probes or load-balancer dependency checks.</p>
+    </div>
+  </div>
+
+  <div class="callout info">
+    Health endpoints are decorated with <code>@Public()</code> and bypass <code>ApiKeyGuard</code>. Use <code>/health/live</code> for liveness and <code>/health/ready</code> or <code>/health</code> for dependency readiness.
+  </div>
+</section>
+
+<!-- ═══════════ MULTI-TENANCY ═══════════ -->
+<section id="multitenancy">
+  <h2><span class="icon">◈</span>Multi-Tenancy</h2>
+  <p>FuseCore uses a <strong>database-per-tenant</strong> isolation model. Each tenant has its own MySQL database. The management database stores tenant metadata and credentials; it never stores customer or financial data.</p>
+
+  <h3>How it Works</h3>
+  <ol style="color:var(--muted);padding-left:20px;line-height:2.2">
+    <li>Caller sends the tenant's <code>X-API-Key</code> header. <code>ApiKeyGuard</code> resolves the matching tenant and attaches it to the request.</li>
+    <li><code>TenantDataSourcePool</code> resolves the tenant's database connection from an in-memory pool or establishes a new one.</li>
+    <li>All domain services are <code>@Injectable({ scope: Scope.REQUEST })</code> — they receive the tenant-scoped <code>DataSource</code> via request context.</li>
+    <li>Tenant databases are provisioned automatically on POST /tenants and are seeded with the default GL chart of accounts.</li>
+  </ol>
+
+  <div class="callout warn">
+    <strong>Cross-tenant data access is impossible by design.</strong> Services never share DataSource instances across tenants. The pool is keyed by shortname; each entry is an independent TypeORM DataSource pointing to a different database.
+  </div>
+</section>
+
+<!-- ═══════════ SECURITY ═══════════ -->
+<section id="security">
+  <h2><span class="icon">◈</span>Security</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3>Helmet</h3>
+      <p>Applied globally in <code>main.ts</code>. Sets security headers: CSP, HSTS, X-Frame-Options, etc.</p>
+    </div>
+    <div class="card">
+      <h3>Backend Access</h3>
+      <p>Browser CORS is not enabled. Tenant access is enforced with API keys, scopes, expiry, revocation, request IDs, and IP allowlists.</p>
+    </div>
+    <div class="card">
+      <h3>Rate Limiting</h3>
+      <p>Global: 100 req / 60 s. Sensitive write endpoints: 10 req / 60 s.</p>
+    </div>
+    <div class="card">
+      <h3>Redlock</h3>
+      <p>Distributed Redis lock prevents concurrent balance mutations on the same account.</p>
+    </div>
+    <div class="card">
+      <h3>Compression</h3>
+      <p>HTTP response compression applied globally.</p>
+    </div>
+    <div class="card">
+      <h3>Soft Deletes</h3>
+      <p>All mutable entities use <code>deletedAt</code>. Hard <code>DELETE</code> is never called.</p>
+    </div>
+  </div>
+
+  <h3>RedlockInterceptor</h3>
+  <p>Registered globally — serializes concurrent write requests per API client using a distributed Redis lock. Prevents phantom reads and double-spend scenarios at the application layer, complementing the database-level pessimistic locks inside transactions.</p>
+</section>
+
+<!-- ═══════════ OUTBOX ═══════════ -->
+<section id="outbox">
+  <h2><span class="icon">◈</span>Durable Outbox</h2>
+  <p>The durable outbox protects side effects that must happen after a successful database commit. Services write <code>outbox_events</code> rows inside the same transaction as the domain change. The worker publishes those rows after commit.</p>
+
+  <div class="callout info">
+    <strong>Why this exists.</strong> BullMQ retries jobs after they are enqueued, but it cannot protect the gap between a successful MySQL commit and a process crash before <code>queue.add()</code>. The outbox closes that gap.
+  </div>
+
+  <h3>Outbox Table</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Field</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>eventId</code></td><td>Unique idempotency key for the event and dispatched BullMQ job</td></tr>
+        <tr><td><code>eventType</code></td><td>Domain event name such as <code>transaction.completed</code> or <code>loan.disbursed</code></td></tr>
+        <tr><td><code>aggregateType</code> / <code>aggregateId</code></td><td>Business object that produced the event</td></tr>
+        <tr><td><code>payload</code></td><td>Event body delivered to the dispatcher target</td></tr>
+        <tr><td><code>targetQueue</code> / <code>targetJobName</code></td><td>Optional BullMQ destination. Events without a target are still persisted as domain events.</td></tr>
+        <tr><td><code>status</code></td><td><code>PENDING</code>, <code>PROCESSING</code>, <code>PUBLISHED</code>, <code>FAILED</code>, or <code>DEAD_LETTER</code></td></tr>
+        <tr><td><code>attempts</code>, <code>nextAttemptAt</code>, <code>lastError</code></td><td>Retry and diagnostic state</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Dispatcher</h3>
+  <p>The worker schedules <code>DISPATCH_OUTBOX_EVENTS</code> on the <code>outbox</code> queue every 10 seconds for each active tenant. The dispatcher scans due <code>PENDING</code> and <code>FAILED</code> rows, publishes to the configured BullMQ queue, and marks the row <code>PUBLISHED</code>. Failed dispatches use exponential backoff and move to <code>DEAD_LETTER</code> after <code>maxAttempts</code>.</p>
+  <p>Dispatched jobs use <code>jobId = eventId</code>, so queue insertion is idempotent for each outbox event.</p>
+
+  <h3>Event Types</h3>
+  <p>FuseCore defines event types for customer, account, transaction, payment, loan, ledger, and AML domains. The first production integration is on transfer/debit/credit: transaction domain events, audit log jobs, AML evaluation jobs, and transfer SMS jobs are written as outbox rows inside the same balance-update transaction.</p>
+
+  <pre><span class="cm">// Transaction service pattern</span>
+<span class="kw">await</span> dataSource.<span class="fn">transaction</span>(<span class="kw">async</span> (manager) =&gt; {
+  <span class="cm">// write balances, transactions, charges, and ledger journals</span>
+  <span class="kw">await</span> outboxService.<span class="fn">addEvent</span>({
+    eventType: <span class="str">"transaction.completed"</span>,
+    aggregateType: <span class="str">"Transaction"</span>,
+    aggregateId: transactionRef,
+    targetQueue: <span class="str">"aml"</span>,
+    targetJobName: <span class="str">"evaluate_aml_rules"</span>,
+    payload: { transactionRef, accountId, amountKobo }
+  }, manager);
+});</pre>
+
+  <div class="callout success">
+    <strong>Rollback invariant.</strong> Tests assert that if the transaction rolls back, no outbox row is written and no side effect can be dispatched.
+  </div>
+</section>
+
+<!-- ═══════════ QUEUES ═══════════ -->
+<section id="queues">
+  <h2><span class="icon">◈</span>Queues &amp; Workers</h2>
+  <p>BullMQ runs 8 queues consumed by the <code>apps/worker</code> process. All jobs use attempts: 3 with exponential backoff starting at 2 s.</p>
+
+  <div class="queue-card">
+    <div class="q-name">transactions-queue</div>
+    <div class="q-jobs"><strong>Transaction Processing</strong>Post-transaction GL reconciliation and balance verification.</div>
+  </div>
+  <div class="queue-card">
+    <div class="q-name">notifications-queue</div>
+    <div class="q-jobs"><strong>Notifications</strong>Debit/credit/transfer alerts dispatched to downstream notification services.</div>
+  </div>
+  <div class="queue-card">
+    <div class="q-name">audit-queue</div>
+    <div class="q-jobs"><strong>Audit Logging</strong>Writes immutable audit records for every state change and financial operation.</div>
+  </div>
+  <div class="queue-card">
+    <div class="q-name">reconciliation</div>
+    <div class="q-jobs"><strong>Reconciliation</strong>GL ↔ account balance reconciliation jobs. Note: the nightly EOD reconciliation job is enqueued into the <code>transactions</code> queue, not this one — this queue is reserved for ad-hoc reconciliation tasks.</div>
+  </div>
+  <div class="queue-card">
+    <div class="q-name">outbox</div>
+    <div class="q-jobs"><strong>Outbox Dispatch</strong>Publishes committed <code>outbox_events</code> to their target queues with idempotent job IDs and retry/dead-letter tracking.</div>
+  </div>
+  <div class="queue-card">
+    <div class="q-name">loan-processing</div>
+    <div class="q-jobs"><strong>Loan Processing</strong>Loan application processing, disbursement, repayment, default detection, and schedule generation.</div>
+  </div>
+  <div class="queue-card">
+    <div class="q-name">reporting</div>
+    <div class="q-jobs"><strong>Reporting</strong>Daily account statement generation and financial summary reports.</div>
+  </div>
+  <div class="queue-card">
+    <div class="q-name">aml</div>
+    <div class="q-jobs"><strong>AML Screening</strong>Async per-transaction rule evaluation plus the three recurring AML scheduler jobs (see below).</div>
+  </div>
+
+  <h3>Scheduled Jobs</h3>
+  <p style="color:var(--muted);line-height:1.8">The worker registers BullMQ job schedulers on startup via <code>upsertJobScheduler</code> — one set per active tenant. These are <strong>not</strong> <code>@nestjs/schedule</code> cron decorators; they live inside BullMQ and survive worker restarts. Each scheduler key is namespaced by tenant shortname so tenants are processed independently.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Scheduler key</th><th>Queue</th><th>Job</th><th>Cadence</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>aml-screen-{tenant}</code></td>
+          <td><code>aml</code></td>
+          <td><code>SCREEN_CUSTOMER_SANCTIONS</code></td>
+          <td>Every 24 h</td>
+          <td>Screens all customers against the sanctions / PEP watchlist and updates their <code>sanctionsStatus</code> and <code>pepStatus</code></td>
+        </tr>
+        <tr>
+          <td><code>aml-risk-{tenant}</code></td>
+          <td><code>aml</code></td>
+          <td><code>COMPUTE_CUSTOMER_RISK</code></td>
+          <td>Every 24 h</td>
+          <td>Recomputes each customer's composite risk rating based on transaction behaviour, KYC tier, PEP status, and open alerts</td>
+        </tr>
+        <tr>
+          <td><code>aml-deadlines-{tenant}</code></td>
+          <td><code>aml</code></td>
+          <td><code>CHECK_ALERT_DEADLINES</code></td>
+          <td>Every 30 min</td>
+          <td>Identifies open AML alerts approaching their regulatory reporting deadline and triggers <code>ALERT_APPROACHING_DEADLINE</code> notifications</td>
+        </tr>
+        <tr>
+          <td><code>outbox-dispatch-{tenant}</code></td>
+          <td><code>outbox</code></td>
+          <td><code>DISPATCH_OUTBOX_EVENTS</code></td>
+          <td>Every 10 s</td>
+          <td>Publishes due durable outbox events and advances retry/dead-letter state</td>
+        </tr>
+        <tr>
+          <td><code>eod-reconcile-{tenant}</code></td>
+          <td><code>transactions</code></td>
+          <td><code>RECONCILE_TRANSACTIONS</code></td>
+          <td>Daily at 00:00 Africa/Lagos (<code>0 0 * * *</code>)</td>
+          <td>Reconciles every account's ledger balance against the GL — flags any discrepancy as a reconciliation error for investigation</td>
+        </tr>
+        <tr>
+          <td><code>eod-statement-{tenant}</code></td>
+          <td><code>reporting</code></td>
+          <td><code>DAILY_ACCOUNT_STATEMENT</code></td>
+          <td>Daily at 00:05 Africa/Lagos (<code>5 0 * * *</code>)</td>
+          <td>Generates end-of-day account statements for all accounts with activity; runs 5 minutes after reconciliation to ensure balances are settled</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <strong>Schedulers are registered per active tenant on worker boot.</strong> When a new tenant is provisioned, the worker must be restarted (or a re-registration endpoint invoked) for that tenant's scheduled jobs to be registered. <code>upsertJobScheduler</code> is idempotent — restarting the worker does not create duplicate schedulers. EOD schedulers for inactive tenants are removed on worker boot.
+  </div>
+
+  <h3>Job Configuration</h3>
+  <pre>{
+  attempts: <span class="num">3</span>,
+  backoff: { type: <span class="str">'exponential'</span>, delay: <span class="num">2000</span> },
+  removeOnComplete: { count: <span class="num">1000</span> },
+  removeOnFail: { count: <span class="num">5000</span> },
+}</pre>
+
+  <div class="callout warn">
+    <strong>Queue failures are non-fatal for financial operations.</strong> Job dispatch is always wrapped in <code>.catch()</code> — a Redis/BullMQ outage does not roll back the financial transaction that triggered the job. Audit and notification failures are logged and monitored separately.
+  </div>
+</section>
+
+<!-- ═══════════ CACHING ═══════════ -->
+<section id="caching">
+  <h2><span class="icon">◈</span>Caching</h2>
+  <p>Redis-backed response caching via a custom <code>CacheInterceptor</code>. Cache keys are namespaced by tenant shortname.</p>
+
+  <h3>Key Patterns</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Pattern</th><th>TTL</th><th>Invalidated when</th></tr></thead>
+      <tbody>
+        <tr><td><code>fusecore:{shortname}:balance:{accountNo}</code></td><td>30 s</td><td>Any debit, credit, or transfer on the account</td></tr>
+        <tr><td><code>fusecore:{shortname}:account:no:{accountNo}</code></td><td>60 s</td><td>Account status change, balance update</td></tr>
+        <tr><td><code>fusecore:{shortname}:*</code></td><td>varies</td><td>Wildcard pattern delete via <code>delByPattern()</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <strong>Both cache keys are always flushed together</strong> on balance-modifying operations — a debit flushes both <code>balance:</code> and <code>account:no:</code> for the affected account.
+  </div>
+</section>
+
+<!-- ═══════════ PII ENCRYPTION ═══════════ -->
+<section id="pii">
+  <h2><span class="icon">◈</span>PII Encryption</h2>
+
+  <h3>Encrypted Fields</h3>
+  <p>The following customer fields are encrypted at rest using <strong>AES-256-GCM</strong> via the <code>EncryptTransformer</code> TypeORM column transformer:</p>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px">
+    <span class="chip purple">email</span>
+    <span class="chip purple">phone</span>
+    <span class="chip purple">bvn</span>
+    <span class="chip purple">nin</span>
+    <span class="chip purple">identityNumber</span>
+  </div>
+
+  <h3>Blind Indexes</h3>
+  <p>Searchable encrypted fields have a parallel <code>*_hash</code> column containing an <strong>HMAC-SHA256 blind index</strong>. All <code>WHERE</code> clauses on these fields must target the hash column:</p>
+  <pre><span class="cm">// ✓ Correct — query the blind index</span>
+<span class="kw">const</span> customer = <span class="kw">await</span> repo.<span class="fn">findOne</span>({
+  where: { email_hash: <span class="fn">blindIndex</span>(email) },
+});
+
+<span class="cm">// ✗ Wrong — querying encrypted ciphertext never matches</span>
+<span class="kw">const</span> customer = <span class="kw">await</span> repo.<span class="fn">findOne</span>({
+  where: { email: email },  <span class="cm">// always fails</span>
+});</pre>
+
+  <h3>Unique Constraints</h3>
+  <p>Uniqueness is enforced on the <code>*_hash</code> columns, not the ciphertext columns. LIKE/fuzzy search on encrypted fields is not possible.</p>
+
+  <div class="callout danger">
+    <strong>Key rotation</strong> requires a full re-encryption backfill of all rows with the new key. Plan for a maintenance window and data migration script. Rotation is a breaking change — the new ENCRYPTION_KEY must be deployed atomically with the backfill.
+  </div>
+</section>
+
+<!-- ═══════════ FINANCIAL INTEGRITY ═══════════ -->
+<section id="financial">
+  <h2><span class="icon">◈</span>Financial Integrity Patterns</h2>
+
+  <h3>Pessimistic Locking</h3>
+  <p>Balance-modifying operations use <code>SELECT ... FOR UPDATE</code> to prevent phantom reads under concurrent requests:</p>
+  <pre><span class="kw">const</span> lockedAccount = <span class="kw">await</span> manager
+  .<span class="fn">getRepository</span>(AccountEntity)
+  .<span class="fn">createQueryBuilder</span>(<span class="str">'account'</span>)
+  .<span class="fn">where</span>(<span class="str">'account.id = :id'</span>, { id: account.id })
+  .<span class="fn">setLock</span>(<span class="str">'pessimistic_write'</span>)
+  .<span class="fn">getOne</span>();</pre>
+
+  <h3>Two-Phase Financial Operations</h3>
+  <p>Disbursement, repayment, recovery, and foreclosure all follow the same pattern:</p>
+  <pre><span class="cm">// Phase 1 — durable state change (atomic DB transaction)</span>
+<span class="kw">await</span> dataSource.<span class="fn">transaction</span>(<span class="kw">async</span> (manager) => {
+  <span class="kw">await</span> ledgerService.<span class="fn">autoPost</span>({ ... }, manager);
+  <span class="kw">await</span> manager.<span class="fn">getRepository</span>(LoanEntity).<span class="fn">update</span>(id, { status: LoanStatus.ACTIVE });
+});
+
+<span class="cm">// Phase 2 — external fund movement</span>
+<span class="kw">const</span> result = <span class="kw">await</span> transactionsService.<span class="fn">credit</span>({ ... });
+
+<span class="cm">// Compensating transaction on failure</span>
+<span class="kw">if</span> (!result.NO_ERROR) {
+  <span class="kw">await</span> dataSource.<span class="fn">transaction</span>(<span class="kw">async</span> (manager) => {
+    <span class="kw">await</span> ledgerService.<span class="fn">autoPost</span>({ <span class="cm">/* reversed GL */</span> }, manager);
+    <span class="kw">await</span> manager.<span class="fn">getRepository</span>(LoanEntity).<span class="fn">update</span>(id, { status: LoanStatus.APPROVED });
+  });
+}</pre>
+
+  <h3>Idempotency</h3>
+  <p>Debit, credit, and transfer all accept an optional <code>reference</code> / <code>transactionRef</code>. Before executing, the service checks for an existing transaction with the same reference and returns the original result without re-executing.</p>
+
+  <h3>Monetary Arithmetic</h3>
+  <p>All balance calculations use <code>decimal.js</code>. Native JS floating-point is never used for money.</p>
+  <pre><span class="kw">import</span> Decimal <span class="kw">from</span> <span class="str">'decimal.js'</span>;
+
+<span class="kw">const</span> newBalance = <span class="kw">new</span> <span class="fn">Decimal</span>(account.availableBalance).<span class="fn">minus</span>(amount).<span class="fn">toNumber</span>();</pre>
+</section>
+
+<!-- ═══════════ MIGRATIONS ═══════════ -->
+<section id="migrations">
+  <h2><span class="icon">◈</span>Migrations</h2>
+  <p>All schema changes must go through TypeORM migrations. <code>DB_SYNCHRONIZE</code> must always be <code>false</code> in production.</p>
+
+  <h3>CLI Workflow (development)</h3>
+  <pre><span class="cm"># 1. Make entity changes</span>
+<span class="cm"># 2. Generate migration from entity diff</span>
+yarn db:migration:generate -- --name AddSoftDeleteColumns
+
+<span class="cm"># 3. Review the generated migration file in:</span>
+<span class="cm">#    libs/shared/src/database/migrations/</span>
+
+<span class="cm"># 4. Apply</span>
+yarn db:migration:run
+
+<span class="cm"># 5. Revert if needed</span>
+yarn db:migration:revert</pre>
+
+  <div class="callout info">
+    Migration files in <code>libs/shared/src/database/migrations/</code> must be committed alongside the entity changes that require them. Never commit an entity change without its corresponding migration.
+  </div>
+
+  <h3>Migration API (production)</h3>
+  <p>Migrations can be triggered at runtime via the Migration API. All four endpoints are protected by <code>X-Admin-API-Key</code> (same key used for tenant management).</p>
+
+  <p>Migrations run asynchronously. Once triggered, a Redis lock is acquired <strong>before</strong> the 202 response is returned — so traffic is blocked immediately. The lock is released automatically when the migration completes or fails. Each tenant DB tracks applied migrations independently in its own <code>migrations</code> table (TypeORM default), so only unapplied migrations run.</p>
+
+  <div class="callout danger">
+    <strong>Lock behaviour during migration:</strong> While an admin DB migration is running, all <code>/admin/tenants/*</code> requests return <strong>503 Service Unavailable</strong>. While a tenant DB migration is running, all API requests authenticated with that tenant's key return <strong>503 Service Unavailable</strong>, and tenant-scoped worker jobs wait until the migration lock is released before touching that tenant database. The migration endpoints themselves (<code>/admin/migrations/*</code>) are always reachable so status can be polled and a conflicting trigger returns 409.
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/admin/migrations/admin</span>
+      <span class="endpoint-desc">Run pending migrations on the admin database</span>
+    </div>
+    <div class="endpoint-body">
+      <pre><span class="cm">// Response 202</span>
+{
+  <span class="prop">"message"</span>: <span class="str">"Admin database migration started"</span>,
+  <span class="prop">"status"</span>:  <span class="str">"running"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/admin/migrations/admin/status</span>
+      <span class="endpoint-desc">Poll admin DB migration status</span>
+    </div>
+    <div class="endpoint-body">
+      <pre><span class="cm">// status: "idle" | "running" | "completed" | "failed"</span>
+{
+  <span class="prop">"status"</span>:         <span class="str">"completed"</span>,
+  <span class="prop">"startedAt"</span>:      <span class="str">"2026-04-26T10:00:00.000Z"</span>,
+  <span class="prop">"completedAt"</span>:    <span class="str">"2026-04-26T10:00:01.234Z"</span>,
+  <span class="prop">"migrationsRan"</span>: [<span class="str">"AddTenantMetadata1745200000000"</span>]
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/api/v1/admin/migrations/tenant/:tenantId</span>
+      <span class="endpoint-desc">Run pending TENANT_MIGRATIONS on a specific tenant database</span>
+    </div>
+    <div class="endpoint-body">
+      <pre><span class="cm">// Response 202</span>
+{
+  <span class="prop">"message"</span>: <span class="str">"Migration started for tenant \"acme\""</span>,
+  <span class="prop">"status"</span>:  <span class="str">"running"</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/api/v1/admin/migrations/tenant/:tenantId/status</span>
+      <span class="endpoint-desc">Poll tenant DB migration status</span>
+    </div>
+    <div class="endpoint-body">
+      <pre><span class="cm">// status: "idle" | "running" | "completed" | "failed"</span>
+{
+  <span class="prop">"status"</span>:         <span class="str">"completed"</span>,
+  <span class="prop">"startedAt"</span>:      <span class="str">"2026-04-26T10:01:00.000Z"</span>,
+  <span class="prop">"completedAt"</span>:    <span class="str">"2026-04-26T10:01:03.456Z"</span>,
+  <span class="prop">"migrationsRan"</span>: [<span class="str">"AddSarEntity1745107200000"</span>]
+}</pre>
+    </div>
+  </div>
+
+  <div class="callout info">
+    Status entries are kept in Redis for 24 hours after a migration completes. An <code>idle</code> status means no migration has been run yet (or the status TTL has expired). A <code>failed</code> status includes an <code>error</code> field with the exception message.
+  </div>
+
+  <h3>Soft Delete Convention</h3>
+  <p>Every mutable entity carries <code>@DeleteDateColumn({ name: 'deleted_at' }) deletedAt: Date</code>. TypeORM automatically filters soft-deleted rows in all <code>find*</code> queries. To intentionally query deleted rows, pass <code>{ withDeleted: true }</code>.</p>
+
+  <div class="callout danger">
+    <strong>Never call <code>repository.delete(id)</code> or <code>repository.remove(entity)</code>.</strong> Always use <code>repository.softDelete(id)</code>. The single exception is <code>AuditLogEntity</code>, which has no <code>deletedAt</code> because audit records are immutable and must never be removed.
+  </div>
+</section>
+
+<!-- ═══════════ TESTING ═══════════ -->
+<section id="testing">
+  <h2><span class="icon">◈</span>Testing</h2>
+
+  <ul style="color:var(--muted);padding-left:20px;line-height:2.2">
+    <li>Test files use the <code>*.spec.ts</code> convention and live alongside the source file they test.</li>
+    <li>Test runner: Jest with <code>ts-jest</code>.</li>
+    <li>Do <strong>not</strong> mock the database in integration-level service tests — use a real test database.</li>
+    <li>Run <code>yarn test</code> before marking any task complete.</li>
+    <li>Run <code>yarn test:cov</code> to generate coverage reports.</li>
+  </ul>
+
+  <pre><span class="cm"># Run all tests</span>
+yarn test
+
+<span class="cm"># Run tests for a specific module</span>
+yarn test --testPathPattern=loans.service
+
+<span class="cm"># Coverage</span>
+yarn test:cov</pre>
+</section>
+
+<!-- ═══════════ ENUMS ═══════════ -->
+<section id="enums">
+  <h2><span class="icon">◈</span>Enums Reference</h2>
+
+  <h3>Account Status</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip green">ACTIVE</span>
+    <span class="chip red">FROZEN</span>
+    <span class="chip gray">CLOSED</span>
+    <span class="chip yellow">DORMANT</span>
+  </div>
+
+  <h3>Loan Status</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip blue">PENDING</span>
+    <span class="chip yellow">APPROVED</span>
+    <span class="chip green">DISBURSED</span>
+    <span class="chip green">ACTIVE</span>
+    <span class="chip gray">CLOSED</span>
+    <span class="chip red">REJECTED</span>
+    <span class="chip red">WRITTEN_OFF</span>
+    <span class="chip purple">FORECLOSED</span>
+  </div>
+
+  <h3>Transaction Type</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip red">DEBIT</span>
+    <span class="chip green">CREDIT</span>
+    <span class="chip blue">TRANSFER</span>
+  </div>
+
+  <h3>Transaction Status</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip yellow">PENDING</span>
+    <span class="chip green">SUCCESSFUL</span>
+    <span class="chip red">FAILED</span>
+    <span class="chip red">REVERSED</span>
+    <span class="chip purple">FLAGGED</span>
+  </div>
+
+  <h3>Transaction Channel</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip blue">INTERNAL</span>
+    <span class="chip blue">USSD</span>
+    <span class="chip blue">MOBILE</span>
+    <span class="chip blue">WEB</span>
+    <span class="chip blue">API</span>
+    <span class="chip blue">ATM</span>
+    <span class="chip blue">POS</span>
+  </div>
+
+  <h3>Product Type</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip blue">SAVINGS</span>
+    <span class="chip blue">CURRENT</span>
+    <span class="chip blue">LOAN</span>
+    <span class="chip blue">FIXED_DEPOSIT</span>
+  </div>
+
+  <h3>Product Status</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip green">ACTIVE</span>
+    <span class="chip gray">INACTIVE</span>
+  </div>
+
+  <h3>Customer Tier</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip yellow">TIER_1</span>
+    <span class="chip blue">TIER_2</span>
+    <span class="chip purple">TIER_3</span>
+  </div>
+
+  <h3>Payment Status</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip yellow">PENDING</span>
+    <span class="chip green">COMPLETED</span>
+    <span class="chip red">FAILED</span>
+    <span class="chip red">REVERSED</span>
+  </div>
+
+  <h3>Currency</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip green">NGN</span>
+    <span class="chip blue">USD</span>
+    <span class="chip blue">GBP</span>
+    <span class="chip blue">EUR</span>
+  </div>
+
+  <h3>GL Account Type</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip blue">ASSET</span>
+    <span class="chip red">LIABILITY</span>
+    <span class="chip green">INCOME</span>
+    <span class="chip yellow">EXPENSE</span>
+    <span class="chip purple">EQUITY</span>
+  </div>
+
+  <h3>AML Rule</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+    <span class="chip red">CTR_THRESHOLD</span>
+    <span class="chip red">STRUCTURING</span>
+    <span class="chip red">VELOCITY</span>
+    <span class="chip yellow">ROUND_AMOUNT</span>
+    <span class="chip yellow">DORMANT_REACTIVATION</span>
+    <span class="chip red">HIGH_RISK_COUNTERPARTY</span>
+  </div>
+
+  <hr />
+  <p style="text-align:center;color:var(--muted);font-size:12px;margin-top:32px">
+    FuseCore Developer Manual v2.0 &nbsp;·&nbsp; Generated 2026-04-25 &nbsp;·&nbsp; B2B Core Banking API
+  </p>
+</section>
+
+</div><!-- /content -->
+</main>
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav a[href^="#"]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
