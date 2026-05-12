@@ -1,6 +1,14 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
-import { getCustomer, getTransactions, unwrapList, extractError } from "@/lib/fusecore";
+import {
+  getAccountsByCustomer,
+  getCustomer,
+  getCustomerDocuments,
+  getCustomerRelatedParties,
+  getTransactions,
+  unwrapList,
+  extractError,
+} from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import DataError from "@/components/DataError";
 import Link from "next/link";
@@ -14,9 +22,13 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
   const { id } = await params;
   let customer: Record<string, unknown> | null = null;
+  let accounts: any[] = [];
+  let documents: any[] = [];
+  let relatedParties: any[] = [];
   let transactions: any[] = [];
   let fetchError: string | null = null;
   let txError: string | null = null;
+  let acctError: string | null = null;
 
   try {
     const data = await getCustomer(id);
@@ -26,9 +38,34 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
     console.error(`[customer:${id}] fetch failed:`, fetchError);
   }
 
-  // Recent transactions (best-effort) — if FuseCore exposes accountNumber on customer.
+  // Accounts / documents / related parties (best-effort)
   try {
-    const acctNo = String((customer as any)?.accountNumber || (customer as any)?.primaryAccountNumber || "");
+    const raw = await getAccountsByCustomer(Number((customer as any)?.id ?? id));
+    const payload: any = raw?.data ?? raw;
+    accounts = payload?.items ?? payload?.data ?? payload?.accounts ?? payload ?? [];
+  } catch (err) {
+    acctError = extractError(err);
+    console.error(`[customer:${id}] accounts fetch failed:`, acctError);
+  }
+
+  try {
+    const raw = await getCustomerDocuments(String((customer as any)?.id ?? id));
+    const payload: any = raw?.data ?? raw;
+    documents = payload?.items ?? payload?.data ?? payload?.documents ?? payload ?? [];
+  } catch {}
+
+  try {
+    const raw = await getCustomerRelatedParties(String((customer as any)?.id ?? id));
+    const payload: any = raw?.data ?? raw;
+    relatedParties = payload?.items ?? payload?.data ?? payload?.relatedParties ?? payload ?? [];
+  } catch {}
+
+  // Recent transactions (best-effort)
+  try {
+    const acctNo =
+      String((customer as any)?.accountNumber || (customer as any)?.primaryAccountNumber || "") ||
+      String(accounts?.[0]?.accountNumber || accounts?.[0]?.number || "");
+
     if (acctNo) {
       const raw = await getTransactions({ limit: 20, page: 1, accountNumber: acctNo });
       const { items } = unwrapList<any>(raw);
@@ -169,13 +206,81 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
           )}
         </section>
 
-        {/* Raw data */}
+        {/* Accounts / KYC Docs */}
         <section className="jmb-glass rounded-3xl p-6 lg:col-span-1">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-white">Accounts</h3>
+            <span className="jmb-chip">Live</span>
+          </div>
+
+          {acctError && <DataError title="Couldn't load accounts" message={acctError} />}
+          {accounts.length === 0 ? (
+            <div className="text-sm text-[var(--jmb-text-mute)] py-10 text-center">
+              {acctError ? "Accounts unavailable right now." : "No accounts found for this customer."}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {accounts.slice(0, 8).map((a: any, i: number) => (
+                <div key={i} className="rounded-xl border border-white/5 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-mono text-[var(--jmb-text-mute)] truncate">
+                      {String(a.accountNumber || a.number || a.id || "").slice(0, 24)}
+                    </span>
+                    <span className="jmb-pill jmb-pill-mute">{String(a.type || a.accountType || "ACCOUNT")}</span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-white">₦{((Number(a.balance || a.availableBalance || 0)) / 100).toLocaleString()}</span>
+                    <span className="text-[11px] text-[var(--jmb-text-dim)]">{String(a.status || a.state || "—")}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-xs font-semibold text-white">Documents</h4>
+              <span className="jmb-chip">KYC</span>
+            </div>
+            {documents.length === 0 ? (
+              <div className="text-sm text-[var(--jmb-text-mute)]">No documents</div>
+            ) : (
+              <ul className="space-y-1 text-sm text-[var(--jmb-text-dim)]">
+                {documents.slice(0, 6).map((d: any, i: number) => (
+                  <li key={i} className="flex items-center justify-between gap-3">
+                    <span className="truncate">{String(d.type || d.documentType || d.name || "Document")}</span>
+                    <span className="text-[11px] text-[var(--jmb-text-mute)]">{String(d.status || "—")}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {relatedParties.length > 0 && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-semibold text-white">Related parties</h4>
+                <span className="jmb-chip">KYC</span>
+              </div>
+              <ul className="space-y-1 text-sm text-[var(--jmb-text-dim)]">
+                {relatedParties.slice(0, 6).map((p: any, i: number) => (
+                  <li key={i} className="flex items-center justify-between gap-3">
+                    <span className="truncate">{String(p.name || `${p.firstName || ""} ${p.lastName || ""}` || "Party")}</span>
+                    <span className="text-[11px] text-[var(--jmb-text-mute)]">{String(p.relationship || p.type || "—")}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+
+        {/* Raw data */}
+        <section className="jmb-glass rounded-3xl p-6 lg:col-span-3">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-white">Raw data</h3>
             <span className="jmb-chip">JSON</span>
           </div>
-          <pre className="text-[11px] text-[var(--jmb-text-dim)] overflow-auto max-h-72 rounded-xl p-3 jmb-glass-hi font-mono leading-relaxed">
+          <pre className="text-[11px] text-[var(--jmb-text-dim)] overflow-auto max-h-80 rounded-xl p-3 jmb-glass-hi font-mono leading-relaxed">
             {JSON.stringify(customer, null, 2)}
           </pre>
         </section>

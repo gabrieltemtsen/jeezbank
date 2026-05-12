@@ -103,9 +103,46 @@ export async function getCustomer(id: string) {
   return res.data;
 }
 
+export async function getCustomerDocuments(id: string) {
+  const res = await fusecore.get(`/customers/${id}/documents`);
+  return res.data;
+}
+
+export async function getCustomerRelatedParties(id: string) {
+  const res = await fusecore.get(`/customers/${id}/related-parties`);
+  return res.data;
+}
+
 // ── Accounts ───────────────────────────────────────────────────────
+export async function getAccounts(params?: {
+  page?: number;
+  limit?: number;
+  customerId?: number;
+  productId?: number;
+  type?: string;
+  status?: string;
+}) {
+  const res = await fusecore.get(`/accounts`, { params });
+  return res.data;
+}
+
+export async function getAccountsByCustomer(customerId: number) {
+  const res = await fusecore.get(`/accounts/customer/${customerId}`);
+  return res.data;
+}
+
 export async function getAccount(id: string) {
   const res = await fusecore.get(`/accounts/${id}`);
+  return res.data;
+}
+
+export async function getAccountByAccountNumber(accountNumber: string) {
+  const res = await fusecore.get(`/accounts/no/${accountNumber}`);
+  return res.data;
+}
+
+export async function getAccountBalance(accountNumber: string) {
+  const res = await fusecore.get(`/accounts/no/${accountNumber}/balance`);
   return res.data;
 }
 
@@ -138,7 +175,13 @@ export async function getTransactionReceipt(id: string) {
 }
 
 // ── Loans ──────────────────────────────────────────────────────────
-export async function getLoans(params?: { limit?: number; offset?: number; status?: string }) {
+export async function getLoans(params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  customerId?: number;
+  productId?: number;
+}) {
   const res = await fusecore.get("/loans", { params });
   return res.data;
 }
