@@ -25,8 +25,30 @@ export async function getAccount(id: string) {
   return res.data;
 }
 
-export async function getTransactions(params?: { limit?: number; offset?: number; status?: string }) {
+export async function getTransactions(params?: {
+  page?: number;
+  limit?: number;
+  accountNumber?: string;
+  status?: string;
+  fromDate?: string;
+  toDate?: string;
+}) {
   const res = await fusecore.get("/transactions", { params });
+  return res.data;
+}
+
+export async function getTransaction(id: string) {
+  const res = await fusecore.get(`/transactions/${id}`);
+  return res.data;
+}
+
+export async function getTransactionByReference(ref: string) {
+  const res = await fusecore.get(`/transactions/ref/${ref}`);
+  return res.data;
+}
+
+export async function getTransactionReceipt(id: string) {
+  const res = await fusecore.get(`/transactions/${id}/receipt`);
   return res.data;
 }
 
