@@ -2,14 +2,18 @@ import axios from "axios";
 
 const BASE_URL = process.env.FUSECORE_BASE_URL;
 const API_KEY = process.env.FUSECORE_API_KEY;
+const TENANT_ID = process.env.FUSECORE_TENANT_ID;
 
 if (!BASE_URL) console.warn("[fusecore] FUSECORE_BASE_URL is not set");
 if (!API_KEY) console.warn("[fusecore] FUSECORE_API_KEY is not set");
+if (!TENANT_ID) console.warn("[fusecore] FUSECORE_TENANT_ID is not set (required for multi-tenant auth)");
 
 const fusecore = axios.create({
   baseURL: BASE_URL || "http://localhost:3000/api/v1",
   headers: {
     "X-API-Key": API_KEY ?? "",
+    // FuseCore is multi-tenant; most endpoints require tenant context.
+    "X-Tenant-Id": TENANT_ID ?? "",
     "Content-Type": "application/json",
   },
   timeout: 15000,
@@ -19,6 +23,7 @@ const fusecore = axios.create({
 fusecore.interceptors.request.use((config) => {
   console.log(`[fusecore] → ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
   console.log(`[fusecore]   X-API-Key: ${config.headers["X-API-Key"] ? "set ✓" : "MISSING ✗"}`);
+  console.log(`[fusecore]   X-Tenant-Id: ${config.headers["X-Tenant-Id"] ? "set ✓" : "MISSING ✗"}`);
   return config;
 });
 
