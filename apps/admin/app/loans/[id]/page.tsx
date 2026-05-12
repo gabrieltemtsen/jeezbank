@@ -1,19 +1,27 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
-import { getLoan } from "@/lib/fusecore";
+import { getLoan, extractError } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
+import DataError from "@/components/DataError";
+import LoanActionPanel from "@/components/LoanActionPanel";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function LoanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminSession();
   if (!session) redirect("/login");
 
   const { id } = await params;
-  let loan: Record<string, unknown> | null = null;
+  let loan: Record<string, any> | null = null;
+  let fetchError: string | null = null;
   try {
     const data = await getLoan(id);
     loan = data.data || data;
-  } catch {}
+  } catch (err) {
+    fetchError = extractError(err);
+  }
 
   const status = String(loan?.status || "");
   const statusPill =
@@ -31,8 +39,12 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
         </Link>
       </div>
 
+      <DataError message={fetchError} />
+
       {!loan ? (
-        <div className="jmb-glass rounded-2xl p-12 text-center text-[var(--jmb-text-dim)]">Loan not found</div>
+        <div className="jmb-glass rounded-2xl p-12 text-center text-[var(--jmb-text-dim)]">
+          {fetchError ? "Couldn't load loan (see error above)" : "Loan not found"}
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <section className="lg:col-span-2 relative">
@@ -50,18 +62,20 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
                 <Field label="Due date" value={loan.dueDate ? new Date(String(loan.dueDate)).toLocaleDateString() : "—"} />
                 <Field label="Status" value={status || "—"} />
               </div>
+
+              <div className="mt-6">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jmb-text-mute)]">Raw</p>
+                <pre className="mt-2 text-[11px] text-[var(--jmb-text-dim)] overflow-auto max-h-64 rounded-xl p-3 jmb-glass-hi font-mono leading-relaxed">
+                  {JSON.stringify(loan, null, 2)}
+                </pre>
+              </div>
             </div>
           </section>
 
           {session.role === "MANAGER" && (
             <section className="jmb-glass rounded-3xl p-6">
               <h3 className="text-sm font-semibold text-white mb-4">Actions</h3>
-              <div className="space-y-2">
-                {loan.status === "PENDING" && <ActionBtn tone="green" label="Approve loan" icon="check" />}
-                {loan.status === "APPROVED" && <ActionBtn tone="cyan"  label="Disburse loan" icon="send" />}
-                {loan.status === "PENDING" && <ActionBtn tone="red"   label="Reject loan" icon="x" />}
-              </div>
-              <p className="text-[11px] text-[var(--jmb-text-mute)] mt-4">All actions are logged for audit.</p>
+              <LoanActionPanel loanId={String(loan.id)} status={String(loan.status)} />
             </section>
           )}
         </div>

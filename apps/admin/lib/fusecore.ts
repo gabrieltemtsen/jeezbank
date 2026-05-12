@@ -212,12 +212,32 @@ export async function getLoan(id: string) {
 }
 
 export async function approveLoan(id: string, data: { approvedBy: string; notes?: string }) {
-  const res = await fusecore.post(`/loans/${id}/approve`, data);
+  const res = await fusecore.patch(`/loans/${id}/approve`, data);
+  return res.data;
+}
+
+export async function rejectLoan(id: string, data: { rejectedBy: string; reason: string; notes?: string }) {
+  const res = await fusecore.patch(`/loans/${id}/reject`, data);
   return res.data;
 }
 
 export async function disburseLoan(id: string, data: { disbursedBy: string }) {
-  const res = await fusecore.post(`/loans/${id}/disburse`, data);
+  const res = await fusecore.patch(`/loans/${id}/disburse`, data);
+  return res.data;
+}
+
+export async function repayLoan(id: string, data: { amount: number; paidBy: string; channel?: string; narration?: string }) {
+  const res = await fusecore.post(`/loans/${id}/repay`, data);
+  return res.data;
+}
+
+export async function forecloseLoan(id: string, data: { foreclosedBy: string; notes?: string }) {
+  const res = await fusecore.patch(`/loans/${id}/foreclose`, data);
+  return res.data;
+}
+
+export async function recoverLoan(id: string, data: { recoveredBy: string; amount: number; notes?: string }) {
+  const res = await fusecore.post(`/loans/${id}/recover`, data);
   return res.data;
 }
 
