@@ -10,7 +10,11 @@ const fusecore = axios.create({
   timeout: 10000,
 });
 
-export async function getCustomers(params?: { limit?: number; offset?: number; search?: string }) {
+export async function getCustomers(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) {
   const res = await fusecore.get("/customers", { params });
   return res.data;
 }

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
-import { getCustomer } from "@/lib/fusecore";
+import { getCustomer, getTransactions } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import Link from "next/link";
 
@@ -10,10 +10,21 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
   const { id } = await params;
   let customer: Record<string, unknown> | null = null;
+  let transactions: any[] = [];
 
   try {
     const data = await getCustomer(id);
     customer = data.data || data;
+  } catch {}
+
+  // Recent transactions (best-effort) — if FuseCore exposes accountNumber on customer.
+  try {
+    const acctNo = String((customer as any)?.accountNumber || (customer as any)?.primaryAccountNumber || "");
+    if (acctNo) {
+      const data = await getTransactions({ limit: 20, page: 1, accountNumber: acctNo });
+      const payload: any = data.data ?? data;
+      transactions = payload.items ?? payload.data ?? payload.transactions ?? payload ?? [];
+    }
   } catch {}
 
   if (!customer) {
@@ -90,6 +101,49 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
             </div>
           </section>
         )}
+
+        {/* Recent activity */}
+        <section className="jmb-glass rounded-3xl p-6 lg:col-span-1">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-white">Recent transactions</h3>
+            <span className="jmb-chip">Live</span>
+          </div>
+
+          {transactions.length === 0 ? (
+            <div className="text-sm text-[var(--jmb-text-mute)] py-10 text-center">No transactions found (or accountNumber not available).</div>
+          ) : (
+            <div className="space-y-2">
+              {transactions.slice(0, 12).map((tx: any, i: number) => {
+                const isCredit = String(tx.type || "").toUpperCase() === "CREDIT";
+                const status = String(tx.status || "—");
+                const statusPill =
+                  status === "SUCCESS" || status === "SUCCESSFUL" || status === "COMPLETED" ? "jmb-pill-green" :
+                  status === "PENDING" || status === "PROCESSING" ? "jmb-pill-amber" :
+                  status === "FAILED" || status === "REVERSED" ? "jmb-pill-red" : "jmb-pill-mute";
+
+                return (
+                  <a
+                    key={i}
+                    href={`/transactions/${tx.id}`}
+                    className="block rounded-xl border border-white/5 hover:bg-white/5 transition p-3"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs font-mono text-[var(--jmb-text-mute)] truncate">{String(tx.reference || tx.id || "").slice(0, 16)}…</span>
+                      <span className={`jmb-pill ${statusPill}`}>{status}</span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between">
+                      <span className={`text-sm font-semibold ${isCredit ? "text-[var(--jmb-mint)]" : "text-[var(--jmb-pink)]"}`}>
+                        {isCredit ? "+" : "-"}₦{((Number(tx.amount) || 0) / 100).toLocaleString()}
+                      </span>
+                      <span className="text-[11px] text-[var(--jmb-text-dim)]">{tx.createdAt ? new Date(String(tx.createdAt)).toLocaleString() : "—"}</span>
+                    </div>
+                    <div className="mt-1 text-[11px] text-[var(--jmb-text-dim)] truncate">{String(tx.narration || "—")}</div>
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </section>
 
         {/* Raw data */}
         <section className="jmb-glass rounded-3xl p-6 lg:col-span-1">

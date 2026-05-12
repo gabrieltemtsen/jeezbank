@@ -3,6 +3,7 @@ import { getAdminSession } from "@/lib/auth";
 import { getCustomers } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
+import Pagination from "@/components/Pagination";
 import Link from "next/link";
 
 export default async function CustomersPage({ searchParams }: { searchParams: Promise<{ search?: string; page?: string }> }) {
@@ -10,17 +11,17 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
   if (!session) redirect("/login");
 
   const params = await searchParams;
-  const page = parseInt(params.page || "1");
+  const page = Math.max(1, parseInt(params.page || "1"));
   const limit = 20;
-  const offset = (page - 1) * limit;
 
   let customers: Record<string, unknown>[] = [];
   let total = 0;
 
   try {
-    const data = await getCustomers({ limit, offset, search: params.search });
-    customers = data.data || data.customers || data || [];
-    total = data.total || customers.length;
+    const data = await getCustomers({ page, limit, search: params.search });
+    const payload: any = data.data ?? data;
+    customers = payload.items ?? payload.data ?? payload.customers ?? payload ?? [];
+    total = payload.total ?? payload.meta?.total ?? customers.length;
   } catch {}
 
   return (
@@ -101,6 +102,14 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
           </table>
         </div>
       </div>
+
+      <Pagination
+        basePath="/customers"
+        page={page}
+        pageSize={limit}
+        total={total}
+        query={{ search: params.search }}
+      />
     </Shell>
   );
 }
