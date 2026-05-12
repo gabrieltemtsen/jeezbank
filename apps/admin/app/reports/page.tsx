@@ -1,8 +1,12 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
-import { getCbnReturns } from "@/lib/fusecore";
+import { getCbnReturns, extractError } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
+import DataError from "@/components/DataError";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
   const session = await getAdminSession();
@@ -12,11 +16,15 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   const params = await searchParams;
   const period = params.period || new Date().toISOString().slice(0, 7);
   let report: Record<string, unknown> | null = null;
+  let fetchError: string | null = null;
 
   try {
     const data = await getCbnReturns({ period, format: "json" });
     report = data.data || data;
-  } catch {}
+  } catch (err) {
+    fetchError = extractError(err);
+    console.error("[reports] fetch failed:", fetchError);
+  }
 
   const ready = !!(report && (report as Record<string, unknown>).readyForSubmission);
 
@@ -32,6 +40,8 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
           </form>
         }
       />
+
+      <DataError message={fetchError} />
 
       <div className="jmb-glass rounded-2xl p-6">
         {!report ? (

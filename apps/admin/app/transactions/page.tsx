@@ -1,9 +1,13 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
-import { getTransactions } from "@/lib/fusecore";
+import { getTransactions, unwrapList, extractError } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
 import Pagination from "@/components/Pagination";
+import DataError from "@/components/DataError";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function TransactionsPage({
   searchParams,
@@ -19,18 +23,22 @@ export default async function TransactionsPage({
 
   let transactions: Record<string, any>[] = [];
   let total = 0;
+  let fetchError: string | null = null;
 
   try {
-    const data = await getTransactions({
+    const raw = await getTransactions({
       page,
       limit,
       status: sp.status || undefined,
       accountNumber: sp.accountNumber || undefined,
     });
-    const payload = data.data ?? data;
-    transactions = payload.items ?? payload.data ?? payload.transactions ?? payload ?? [];
-    total = payload.total ?? payload.meta?.total ?? transactions.length;
-  } catch {}
+    const { items, total: t } = unwrapList<Record<string, any>>(raw);
+    transactions = items;
+    total = t;
+  } catch (err) {
+    fetchError = extractError(err);
+    console.error("[transactions] fetch failed:", fetchError);
+  }
 
   const credits = transactions.filter((t) => String(t.type).toUpperCase() === "CREDIT").length;
   const debits = transactions.filter((t) => String(t.type).toUpperCase() === "DEBIT").length;
@@ -62,6 +70,8 @@ export default async function TransactionsPage({
         }
       />
 
+      <DataError message={fetchError} />
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <Kpi label="Volume (sample)" value={`₦${(totalVolume / 100).toLocaleString()}`} accent="var(--jmb-cyan)" />
         <Kpi label="Credits" value={String(credits)} accent="var(--jmb-mint)" />
@@ -83,7 +93,11 @@ export default async function TransactionsPage({
             </thead>
             <tbody>
               {transactions.length === 0 ? (
-                <tr><td colSpan={6} className="text-center text-[var(--jmb-text-mute)] py-12">No transactions found</td></tr>
+                <tr>
+                  <td colSpan={6} className="text-center text-[var(--jmb-text-mute)] py-12">
+                    {fetchError ? "Couldn't load transactions (see error above)" : "No transactions found"}
+                  </td>
+                </tr>
               ) : (
                 transactions.map((tx, i) => {
                   const isCredit = String(tx.type || "").toUpperCase() === "CREDIT";

@@ -1,19 +1,28 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
-import { getLoans } from "@/lib/fusecore";
+import { getLoans, unwrapList, extractError } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
+import DataError from "@/components/DataError";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function LoansPage() {
   const session = await getAdminSession();
   if (!session) redirect("/login");
 
   let loans: Record<string, unknown>[] = [];
+  let fetchError: string | null = null;
   try {
-    const data = await getLoans({ limit: 50 });
-    loans = data.data || data || [];
-  } catch {}
+    const raw = await getLoans({ limit: 50 });
+    const { items } = unwrapList<Record<string, unknown>>(raw);
+    loans = items;
+  } catch (err) {
+    fetchError = extractError(err);
+    console.error("[loans] fetch failed:", fetchError);
+  }
 
   const statusPill: Record<string, string> = {
     PENDING:   "jmb-pill-amber",
@@ -33,6 +42,8 @@ export default async function LoansPage() {
         actions={<button className="jmb-btn jmb-btn-sm">New facility</button>}
       />
 
+      <DataError message={fetchError} />
+
       <div className="jmb-glass rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="jmb-table">
@@ -48,7 +59,9 @@ export default async function LoansPage() {
             </thead>
             <tbody>
               {loans.length === 0 ? (
-                <tr><td colSpan={6} className="text-center text-[var(--jmb-text-mute)] py-12">No loans found</td></tr>
+                <tr><td colSpan={6} className="text-center text-[var(--jmb-text-mute)] py-12">
+                  {fetchError ? "Couldn't load loans (see error above)" : "No loans found"}
+                </td></tr>
               ) : (
                 loans.map((loan, i) => (
                   <tr key={i}>

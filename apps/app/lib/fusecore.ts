@@ -34,13 +34,32 @@ fusecore.interceptors.response.use(
 );
 
 // ── Customers ──────────────────────────────────────────────
+export type CustomerType = "INDIVIDUAL" | "BUSINESS";
+export type Gender = "MALE" | "FEMALE" | "OTHER";
+export type IdentityType = "NIN" | "BVN" | "PASSPORT" | "DRIVERS_LICENSE" | "VOTERS_CARD";
+
+export interface CustomerAddress {
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode?: string;
+}
+
 export async function createCustomer(data: {
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  middleName?: string;
+  dateOfBirth?: string;       // ISO YYYY-MM-DD
+  gender?: Gender;
+  type?: CustomerType;
+  identityType?: IdentityType;
+  identityNumber?: string;
   bvn?: string;
   nin?: string;
+  address?: CustomerAddress;
 }) {
   const res = await fusecore.post("/customers", data);
   return res.data;

@@ -1,10 +1,15 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
-import { getCustomers } from "@/lib/fusecore";
+import { getCustomers, unwrapList, extractError } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
 import Pagination from "@/components/Pagination";
+import DataError from "@/components/DataError";
 import Link from "next/link";
+
+// Never cache — always fetch fresh from FuseCore on every request.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function CustomersPage({ searchParams }: { searchParams: Promise<{ search?: string; page?: string }> }) {
   const session = await getAdminSession();
@@ -16,13 +21,17 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
 
   let customers: Record<string, unknown>[] = [];
   let total = 0;
+  let fetchError: string | null = null;
 
   try {
-    const data = await getCustomers({ page, limit, search: params.search });
-    const payload: any = data.data ?? data;
-    customers = payload.items ?? payload.data ?? payload.customers ?? payload ?? [];
-    total = payload.total ?? payload.meta?.total ?? customers.length;
-  } catch {}
+    const raw = await getCustomers({ page, limit, search: params.search });
+    const { items, total: t } = unwrapList<Record<string, unknown>>(raw);
+    customers = items;
+    total = t;
+  } catch (err) {
+    fetchError = extractError(err);
+    console.error("[customers] fetch failed:", fetchError);
+  }
 
   return (
     <Shell role={session.role} name={session.name}>
@@ -43,6 +52,8 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         }
       />
 
+      <DataError message={fetchError} />
+
       <div className="jmb-glass rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="jmb-table">
@@ -58,7 +69,11 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
             </thead>
             <tbody>
               {customers.length === 0 ? (
-                <tr><td colSpan={6} className="text-center text-[var(--jmb-text-mute)] py-12">No customers found</td></tr>
+                <tr>
+                  <td colSpan={6} className="text-center text-[var(--jmb-text-mute)] py-12">
+                    {fetchError ? "Couldn't load customers (see error above)" : "No customers found"}
+                  </td>
+                </tr>
               ) : (
                 customers.map((c, i) => {
                   const name = `${String(c.firstName || "")} ${String(c.lastName || "")}`.trim() || "Unnamed";

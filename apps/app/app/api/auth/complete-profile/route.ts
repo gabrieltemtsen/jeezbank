@@ -1,30 +1,98 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createCustomer, createAccount } from "@/lib/fusecore";
+import {
+  createCustomer,
+  createAccount,
+  type Gender,
+  type IdentityType,
+  type CustomerType,
+  type CustomerAddress,
+} from "@/lib/fusecore";
 import { signToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
-  const { phone, firstName, lastName, email, bvn, nin } = await req.json();
+  const body = await req.json();
+  const {
+    phone,
+    firstName,
+    middleName,
+    lastName,
+    email,
+    dateOfBirth,
+    gender,
+    type,
+    identityType,
+    identityNumber,
+    bvn,
+    nin,
+    address,
+  } = body as {
+    phone?: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    email?: string;
+    dateOfBirth?: string;
+    gender?: Gender;
+    type?: CustomerType;
+    identityType?: IdentityType;
+    identityNumber?: string;
+    bvn?: string;
+    nin?: string;
+    address?: CustomerAddress;
+  };
 
   if (!phone || !firstName || !lastName) {
-    return NextResponse.json({ error: "First name, last name and phone are required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "First name, last name and phone are required" },
+      { status: 400 }
+    );
   }
   if (!email) {
     return NextResponse.json({ error: "Email is required" }, { status: 400 });
   }
+  if (!dateOfBirth) {
+    return NextResponse.json({ error: "Date of birth is required" }, { status: 400 });
+  }
+  if (!gender) {
+    return NextResponse.json({ error: "Gender is required" }, { status: 400 });
+  }
+  if (!identityType || !identityNumber) {
+    return NextResponse.json(
+      { error: "Identity type and identity number are required" },
+      { status: 400 }
+    );
+  }
+  if (!address?.street || !address?.city || !address?.state || !address?.country) {
+    return NextResponse.json(
+      { error: "Street, city, state and country are required" },
+      { status: 400 }
+    );
+  }
 
   try {
     // 1. Create customer in FuseCore
-    const customer = await createCustomer({ firstName, lastName, email, phone, bvn, nin });
+    const customer = await createCustomer({
+      firstName,
+      middleName: middleName || undefined,
+      lastName,
+      email,
+      phone,
+      dateOfBirth,
+      gender,
+      type: type || "INDIVIDUAL",
+      identityType,
+      identityNumber,
+      bvn: bvn || undefined,
+      nin: nin || (identityType === "NIN" ? identityNumber : undefined),
+      address,
+    });
     const customerId = String(customer.data?.id ?? customer.id ?? "");
 
     // 2. Create account in FuseCore
     const account = await createAccount({ customerId });
     const accountId = String(account.data?.id ?? account.id ?? "");
 
-    // 3. TODO: Save user to Convex
-    // await convex.mutation(api.users.create, { ... })
-
-    // 4. Issue JWT
+    // 3. Issue JWT
     const token = await signToken({
       userId: `user_${phone}`,
       phone,

@@ -1,8 +1,12 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
-import { getAmlAlerts } from "@/lib/fusecore";
+import { getAmlAlerts, unwrapList, extractError } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
+import DataError from "@/components/DataError";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function AmlPage() {
   const session = await getAdminSession();
@@ -10,10 +14,15 @@ export default async function AmlPage() {
   if (session.role !== "MANAGER") redirect("/dashboard");
 
   let alerts: Record<string, unknown>[] = [];
+  let fetchError: string | null = null;
   try {
-    const data = await getAmlAlerts({ limit: 50 });
-    alerts = data.data || data || [];
-  } catch {}
+    const raw = await getAmlAlerts({ limit: 50 });
+    const { items } = unwrapList<Record<string, unknown>>(raw);
+    alerts = items;
+  } catch (err) {
+    fetchError = extractError(err);
+    console.error("[aml] fetch failed:", fetchError);
+  }
 
   const sev = (s: string) =>
     s === "HIGH" ? "jmb-pill-red" :
@@ -31,6 +40,8 @@ export default async function AmlPage() {
         subtitle={`${alerts.length} active alerts requiring review`}
         actions={<button className="jmb-btn-ghost jmb-btn-sm">Export queue</button>}
       />
+
+      <DataError message={fetchError} />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <SevCard label="High severity" count={high} tone="red" />

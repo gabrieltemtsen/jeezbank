@@ -1,33 +1,49 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
-import { getCustomers, getTransactions, getLoans, getAmlAlerts, getHealth } from "@/lib/fusecore";
+import { getCustomers, getTransactions, getLoans, getAmlAlerts, getHealth, extractError } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
 import PageHeader from "@/components/PageHeader";
+import DataError from "@/components/DataError";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function DashboardPage() {
   const session = await getAdminSession();
   if (!session) redirect("/login");
 
   let stats = { customers: 0, transactions: 0, loans: 0, amlAlerts: 0, health: "unknown" };
+  const errors: string[] = [];
 
-  try {
-    const [customers, transactions, loans, alerts, health] = await Promise.allSettled([
-      getCustomers({ limit: 1 }),
-      getTransactions({ limit: 1 }),
-      getLoans({ limit: 1 }),
-      getAmlAlerts({ limit: 1 }),
-      getHealth(),
-    ]);
+  const [customers, transactions, loans, alerts, health] = await Promise.allSettled([
+    getCustomers({ limit: 1 }),
+    getTransactions({ limit: 1 }),
+    getLoans({ limit: 1 }),
+    getAmlAlerts({ limit: 1 }),
+    getHealth(),
+  ]);
 
-    stats = {
-      customers: customers.status === "fulfilled" ? (customers.value?.total || customers.value?.count || 0) : 0,
-      transactions: transactions.status === "fulfilled" ? (transactions.value?.total || 0) : 0,
-      loans: loans.status === "fulfilled" ? (loans.value?.total || 0) : 0,
-      amlAlerts: alerts.status === "fulfilled" ? (alerts.value?.total || 0) : 0,
-      health: health.status === "fulfilled" ? "online" : "offline",
-    };
-  } catch {}
+  function readTotal(r: PromiseSettledResult<any>, label: string): number {
+    if (r.status === "fulfilled") {
+      const v = r.value;
+      return v?.total ?? v?.data?.total ?? v?.meta?.total ?? v?.count ?? v?.data?.count ?? 0;
+    }
+    const msg = extractError(r.reason);
+    errors.push(`${label}: ${msg}`);
+    console.error(`[dashboard:${label}] failed:`, msg);
+    return 0;
+  }
+
+  stats = {
+    customers: readTotal(customers, "customers"),
+    transactions: readTotal(transactions, "transactions"),
+    loans: readTotal(loans, "loans"),
+    amlAlerts: readTotal(alerts, "amlAlerts"),
+    health: health.status === "fulfilled" ? "online" : "offline",
+  };
+
+  const fetchError = errors.length ? errors.join(" · ") : null;
 
   const cards: { label: string; value: string; trend: string; color: string; icon: React.ReactNode }[] = [
     {
@@ -82,6 +98,8 @@ export default async function DashboardPage() {
           </>
         }
       />
+
+      <DataError title="Some FuseCore endpoints failed" message={fetchError} />
 
       {/* Hero greeting card */}
       <section className="relative mb-7">

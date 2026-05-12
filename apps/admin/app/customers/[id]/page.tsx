@@ -1,8 +1,12 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
-import { getCustomer, getTransactions } from "@/lib/fusecore";
+import { getCustomer, getTransactions, unwrapList, extractError } from "@/lib/fusecore";
 import Shell from "@/components/Shell";
+import DataError from "@/components/DataError";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminSession();
@@ -11,29 +15,46 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   const { id } = await params;
   let customer: Record<string, unknown> | null = null;
   let transactions: any[] = [];
+  let fetchError: string | null = null;
+  let txError: string | null = null;
 
   try {
     const data = await getCustomer(id);
     customer = data.data || data;
-  } catch {}
+  } catch (err) {
+    fetchError = extractError(err);
+    console.error(`[customer:${id}] fetch failed:`, fetchError);
+  }
 
   // Recent transactions (best-effort) — if FuseCore exposes accountNumber on customer.
   try {
     const acctNo = String((customer as any)?.accountNumber || (customer as any)?.primaryAccountNumber || "");
     if (acctNo) {
-      const data = await getTransactions({ limit: 20, page: 1, accountNumber: acctNo });
-      const payload: any = data.data ?? data;
-      transactions = payload.items ?? payload.data ?? payload.transactions ?? payload ?? [];
+      const raw = await getTransactions({ limit: 20, page: 1, accountNumber: acctNo });
+      const { items } = unwrapList<any>(raw);
+      transactions = items;
     }
-  } catch {}
+  } catch (err) {
+    txError = extractError(err);
+    console.error(`[customer:${id}] tx fetch failed:`, txError);
+  }
 
   if (!customer) {
     return (
       <Shell role={session.role} name={session.name}>
-        <div className="jmb-glass rounded-2xl p-12 text-center">
-          <p className="text-[var(--jmb-text-dim)]">Customer not found</p>
-          <Link href="/customers" className="jmb-btn jmb-btn-sm mt-4 inline-flex">Back to customers</Link>
+        <div className="mb-5">
+          <Link href="/customers" className="inline-flex items-center gap-2 text-sm text-[var(--jmb-text-dim)] hover:text-white transition">
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back to customers
+          </Link>
         </div>
+        <DataError message={fetchError} />
+        {!fetchError && (
+          <div className="jmb-glass rounded-2xl p-12 text-center">
+            <p className="text-[var(--jmb-text-dim)]">Customer not found</p>
+            <Link href="/customers" className="jmb-btn jmb-btn-sm mt-4 inline-flex">Back to customers</Link>
+          </div>
+        )}
       </Shell>
     );
   }
@@ -109,8 +130,11 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
             <span className="jmb-chip">Live</span>
           </div>
 
+          {txError && <DataError title="Couldn't load recent transactions" message={txError} />}
           {transactions.length === 0 ? (
-            <div className="text-sm text-[var(--jmb-text-mute)] py-10 text-center">No transactions found (or accountNumber not available).</div>
+            <div className="text-sm text-[var(--jmb-text-mute)] py-10 text-center">
+              {txError ? "Transactions unavailable right now." : "No transactions found (or accountNumber not available)."}
+            </div>
           ) : (
             <div className="space-y-2">
               {transactions.slice(0, 12).map((tx: any, i: number) => {
