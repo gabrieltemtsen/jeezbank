@@ -146,6 +146,26 @@ export async function getAccountBalance(accountNumber: string) {
   return res.data;
 }
 
+export async function getAccountParties(id: number) {
+  const res = await fusecore.get(`/accounts/${id}/parties`);
+  return res.data;
+}
+
+export async function getAccountSignatories(id: number) {
+  const res = await fusecore.get(`/accounts/${id}/signatories`);
+  return res.data;
+}
+
+export async function getAccountMandates(id: number) {
+  const res = await fusecore.get(`/accounts/${id}/mandates`);
+  return res.data;
+}
+
+export async function getAccountBeneficiaries(id: number) {
+  const res = await fusecore.get(`/accounts/${id}/beneficiaries`);
+  return res.data;
+}
+
 // ── Transactions ───────────────────────────────────────────────────
 export async function getTransactions(params?: {
   page?: number;
