@@ -1,20 +1,46 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getAccount } from "@/lib/fusecore";
+import { getAccount, getAccountBalance, unwrap, extractError } from "@/lib/fusecore";
 import { BackBtn, Wordmark } from "@/components/Brand";
 import BottomNav from "@/components/BottomNav";
 import CopyButton from "@/components/CopyButton";
+import DataError from "@/components/DataError";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function FundPage() {
   const session = await getSession();
   if (!session) redirect("/onboarding");
 
-  let account = null;
+  let account: any = null;
+  let balance: any = null;
+  let fetchError: string | null = null;
+
   if (session.accountId) {
-    try { account = await getAccount(session.accountId); } catch {}
+    try {
+      account = unwrap<any>(await getAccount(session.accountId));
+      const accountNumber = account?.accountNumber;
+      if (accountNumber) {
+        try {
+          balance = unwrap<any>(await getAccountBalance(String(accountNumber)));
+        } catch {
+          /* balance is optional; fall back to account.balance */
+        }
+      }
+    } catch (err) {
+      fetchError = extractError(err);
+      console.error("[app:fund] fetch failed:", fetchError);
+    }
   }
 
   const acctNumber = account?.accountNumber || "Generating...";
+  const rawBalance =
+    balance?.availableBalance ?? balance?.balance ?? account?.balance ?? 0;
+  const formattedBalance = (Number(rawBalance) / 100).toLocaleString("en-NG", {
+    style: "currency",
+    currency: "NGN",
+  });
 
   return (
     <div className="min-h-screen pb-28 jmb-page-in">
@@ -29,6 +55,8 @@ export default async function FundPage() {
           <h1 className="text-3xl font-bold text-white tracking-tight">Add money</h1>
           <p className="text-sm text-[var(--jmb-text-dim)] mt-1">Fund your JMB wallet from any Nigerian bank.</p>
         </div>
+
+        <DataError message={fetchError} />
 
         <section className="relative">
           <div className="absolute -inset-1 rounded-[28px] blur-2xl opacity-50 jmb-pulse" style={{ background: "var(--jmb-grad-card)" }} />
@@ -50,6 +78,7 @@ export default async function FundPage() {
             <div className="mt-5 pt-5 border-t border-white/10 space-y-3">
               <Row label="Bank name" value="JeezBank (FuseCore)" />
               <Row label="Account name" value={session.name || "JeezBank User"} />
+              <Row label="Current balance" value={formattedBalance} accent />
             </div>
           </div>
         </section>
@@ -79,11 +108,11 @@ export default async function FundPage() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="flex justify-between items-center">
       <span className="text-xs text-[var(--jmb-text-mute)]">{label}</span>
-      <span className="text-sm font-medium text-white">{value}</span>
+      <span className={`text-sm font-medium ${accent ? "jmb-grad-text font-bold text-base" : "text-white"}`}>{value}</span>
     </div>
   );
 }

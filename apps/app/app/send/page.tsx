@@ -7,10 +7,12 @@ export default function SendPage() {
   const [form, setForm] = useState({ accountNumber: "", bankCode: "", amount: "", narration: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState<{ amount: string; reference?: string } | null>(null);
   const router = useRouter();
 
+  // JMB internal is listed first so users can transfer to other JMB users for free.
   const banks = [
+    { code: "JMB", name: "JeezBank (instant, free)" },
     { code: "044", name: "Access Bank" },
     { code: "023", name: "Citibank" },
     { code: "063", name: "Diamond Bank" },
@@ -39,6 +41,8 @@ export default function SendPage() {
     setError("");
     const amountKobo = Math.round(parseFloat(form.amount) * 100);
     if (isNaN(amountKobo) || amountKobo < 100) return setError("Minimum transfer is ₦1");
+    if (!form.bankCode) return setError("Pick a destination bank");
+    if (!form.accountNumber || form.accountNumber.length !== 10) return setError("Enter a valid 10-digit account number");
     setLoading(true);
     try {
       const res = await fetch("/api/send", {
@@ -48,7 +52,7 @@ export default function SendPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Transfer failed");
-      setSuccess(true);
+      setSuccess({ amount: form.amount, reference: data.reference });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -70,9 +74,17 @@ export default function SendPage() {
             </div>
             <h2 className="text-2xl font-bold text-white mt-5">Transfer successful</h2>
             <p className="text-[var(--jmb-text-dim)] text-sm mt-2">
-              <span className="text-white font-semibold">₦{parseFloat(form.amount).toLocaleString()}</span> sent successfully
+              <span className="text-white font-semibold">₦{parseFloat(success.amount).toLocaleString()}</span> sent successfully
             </p>
-            <button onClick={() => router.push("/home")} className="jmb-btn w-full mt-6">Back to Home</button>
+            {success.reference && (
+              <p className="text-[11px] text-[var(--jmb-text-mute)] mt-2 font-mono break-all">
+                Ref · {success.reference}
+              </p>
+            )}
+            <div className="mt-6 flex gap-2">
+              <button onClick={() => router.push("/home")} className="jmb-btn-ghost flex-1">Home</button>
+              <button onClick={() => router.push("/transactions")} className="jmb-btn flex-[1.2]">View activity</button>
+            </div>
           </div>
         </div>
       </div>
@@ -90,7 +102,7 @@ export default function SendPage() {
 
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white tracking-tight">Send money</h1>
-          <p className="text-sm text-[var(--jmb-text-dim)] mt-1">Move funds to any Nigerian bank, instantly.</p>
+          <p className="text-sm text-[var(--jmb-text-dim)] mt-1">JMB-to-JMB is instant and free. Other banks coming soon.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="jmb-glass rounded-3xl p-6 space-y-5">
@@ -113,8 +125,9 @@ export default function SendPage() {
             <label className="block text-[11px] uppercase tracking-[0.16em] text-[var(--jmb-text-mute)] mb-2">Account number</label>
             <input
               type="text"
+              inputMode="numeric"
               value={form.accountNumber}
-              onChange={(e) => setForm({ ...form, accountNumber: e.target.value })}
+              onChange={(e) => setForm({ ...form, accountNumber: e.target.value.replace(/\D/g, "").slice(0, 10) })}
               placeholder="0123456789"
               maxLength={10}
               className="jmb-input tracking-widest"
@@ -157,6 +170,7 @@ export default function SendPage() {
               value={form.narration}
               onChange={(e) => setForm({ ...form, narration: e.target.value })}
               placeholder="What's it for?"
+              maxLength={100}
               className="jmb-input"
             />
           </div>

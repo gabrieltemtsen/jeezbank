@@ -1,19 +1,53 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { getAccountTransactions } from "@/lib/fusecore";
+import {
+  getAccount,
+  getTransactions,
+  unwrap,
+  unwrapList,
+  extractError,
+} from "@/lib/fusecore";
 import { BackBtn, Wordmark } from "@/components/Brand";
 import BottomNav from "@/components/BottomNav";
+import DataError from "@/components/DataError";
 
-export default async function TransactionsPage() {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function TransactionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; status?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/onboarding");
 
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp.page || "1"));
+  const limit = 50;
+
   let transactions: Record<string, unknown>[] = [];
+  let fetchError: string | null = null;
+  let total = 0;
+
   if (session.accountId) {
     try {
-      const data = await getAccountTransactions(session.accountId, { limit: 50 });
-      transactions = data.data || data || [];
-    } catch {}
+      const acct = unwrap<any>(await getAccount(session.accountId));
+      const accountNumber: string | undefined = acct?.accountNumber;
+      const raw = await getTransactions({
+        accountNumber,
+        status: sp.status || undefined,
+        page,
+        limit,
+      });
+      const { items, total: t } = unwrapList<Record<string, unknown>>(raw);
+      transactions = items;
+      total = t;
+    } catch (err) {
+      fetchError = extractError(err);
+      console.error("[app:transactions] fetch failed:", fetchError);
+    }
   }
 
   // Group by day
@@ -34,10 +68,14 @@ export default async function TransactionsPage() {
           <div className="w-10" />
         </header>
 
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white tracking-tight">Activity</h1>
-          <p className="text-sm text-[var(--jmb-text-dim)] mt-1">All your JMB transactions, in one place.</p>
+        <div className="mb-6 flex items-end justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Activity</h1>
+            <p className="text-sm text-[var(--jmb-text-dim)] mt-1">{total.toLocaleString()} transactions</p>
+          </div>
         </div>
+
+        <DataError message={fetchError} />
 
         {transactions.length === 0 ? (
           <div className="jmb-glass rounded-3xl p-12 text-center">
@@ -46,8 +84,12 @@ export default async function TransactionsPage() {
                 <path d="M3 12h4l2-5 4 10 2-5h6"/>
               </svg>
             </div>
-            <p className="text-white font-medium">No activity yet</p>
-            <p className="text-xs text-[var(--jmb-text-mute)] mt-1">Your transactions will appear here.</p>
+            <p className="text-white font-medium">
+              {fetchError ? "Activity unavailable" : "No activity yet"}
+            </p>
+            <p className="text-xs text-[var(--jmb-text-mute)] mt-1">
+              {fetchError ? "Pull to refresh, or try again shortly." : "Your transactions will appear here."}
+            </p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -65,9 +107,14 @@ export default async function TransactionsPage() {
                   <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jmb-text-mute)] mb-2 px-1">{label}</p>
                   <div className="jmb-glass rounded-2xl divide-y divide-white/5 overflow-hidden">
                     {txs.map((tx, i) => {
-                      const isCredit = tx.type === "CREDIT";
+                      const isCredit = String(tx.type || "").toUpperCase() === "CREDIT";
+                      const status = String(tx.status || "");
                       return (
-                        <div key={i} className="flex items-center justify-between p-4">
+                        <Link
+                          key={String(tx.id || i)}
+                          href={`/transactions/${tx.id || ""}`}
+                          className="flex items-center justify-between p-4 hover:bg-white/[0.04] transition"
+                        >
                           <div className="flex items-center gap-3 min-w-0">
                             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${isCredit ? "bg-[rgba(44,214,160,0.12)] text-[var(--jmb-green)]" : "bg-[rgba(255,92,122,0.12)] text-[var(--jmb-red)]"}`}>
                               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -86,9 +133,9 @@ export default async function TransactionsPage() {
                             <p className={`text-sm font-semibold ${isCredit ? "text-[var(--jmb-green)]" : "text-white"}`}>
                               {isCredit ? "+" : "-"}₦{((Number(tx.amount) || 0) / 100).toLocaleString()}
                             </p>
-                            <p className="text-[10px] uppercase tracking-wider text-[var(--jmb-text-mute)] mt-0.5">{String(tx.status || "")}</p>
+                            <p className="text-[10px] uppercase tracking-wider text-[var(--jmb-text-mute)] mt-0.5">{status}</p>
                           </div>
-                        </div>
+                        </Link>
                       );
                     })}
                   </div>

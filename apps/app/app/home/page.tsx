@@ -1,27 +1,73 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getAccount, getAccountTransactions } from "@/lib/fusecore";
+import {
+  getAccount,
+  getAccountBalance,
+  getTransactions,
+  unwrap,
+  unwrapList,
+  extractError,
+} from "@/lib/fusecore";
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 import { Logo, Wordmark } from "@/components/Brand";
+import DataError from "@/components/DataError";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function HomePage() {
   const session = await getSession();
   if (!session) redirect("/onboarding");
 
-  let account = null;
-  let transactions = [];
+  let account: any = null;
+  let balanceData: any = null;
+  let transactions: any[] = [];
+  let fetchError: string | null = null;
 
   if (session.accountId) {
-    try {
-      account = await getAccount(session.accountId);
-      const txData = await getAccountTransactions(session.accountId, { limit: 5 });
-      transactions = txData.data || txData || [];
-    } catch {}
+    // Pull account, balance, and recent transactions in parallel. Each is
+    // independent — a failure in one shouldn't blank the others.
+    const [a, b, t] = await Promise.allSettled([
+      getAccount(session.accountId),
+      // We need accountNumber for the balance endpoint; we'll fall back to the
+      // account record's `balance` field if the dedicated endpoint isn't ready.
+      getAccount(session.accountId).then((res) => {
+        const acct = unwrap<any>(res);
+        const acctNumber = acct?.accountNumber || acct?.data?.accountNumber;
+        return acctNumber ? getAccountBalance(String(acctNumber)) : res;
+      }),
+      getAccount(session.accountId).then((res) => {
+        const acct = unwrap<any>(res);
+        const acctNumber = acct?.accountNumber || acct?.data?.accountNumber;
+        return getTransactions({
+          accountNumber: acctNumber ? String(acctNumber) : undefined,
+          limit: 5,
+        });
+      }),
+    ]);
+
+    if (a.status === "fulfilled") account = unwrap<any>(a.value);
+    else fetchError = extractError(a.reason);
+
+    if (b.status === "fulfilled") balanceData = unwrap<any>(b.value);
+
+    if (t.status === "fulfilled") {
+      const { items } = unwrapList<any>(t.value);
+      transactions = items;
+    }
   }
 
-  const balance = account?.balance ?? 0;
-  const formattedBalance = (balance / 100).toLocaleString("en-NG", {
+  // Try several common balance shapes.
+  const rawBalance =
+    balanceData?.availableBalance ??
+    balanceData?.balance ??
+    balanceData?.ledgerBalance ??
+    account?.availableBalance ??
+    account?.balance ??
+    0;
+
+  const formattedBalance = (Number(rawBalance) / 100).toLocaleString("en-NG", {
     style: "currency",
     currency: "NGN",
   });
@@ -92,12 +138,13 @@ export default async function HomePage() {
           </Link>
         </header>
 
+        <DataError message={fetchError} />
+
         {/* Hero balance card */}
         <section className="relative">
           <div className="absolute -inset-1 rounded-[28px] blur-2xl opacity-60 jmb-pulse"
                style={{ background: "var(--jmb-grad-card)" }} />
           <div className="relative rounded-[26px] overflow-hidden jmb-glass-hi jmb-glow p-6">
-            {/* aurora blobs */}
             <span className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full blur-3xl opacity-50"
                   style={{ background: "radial-gradient(closest-side, #00d9f5, transparent)" }} />
             <span className="pointer-events-none absolute -bottom-20 -left-10 w-56 h-56 rounded-full blur-3xl opacity-50"
@@ -169,22 +216,24 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Insights strip */}
+        {/* Insights strip — derived from the 5 most recent tx */}
         <section className="mt-6 grid grid-cols-2 gap-3">
-          <div className="jmb-glass rounded-2xl p-4">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jmb-text-mute)]">Inflow</p>
-            <p className="mt-1 text-lg font-bold text-white">₦0</p>
-            <div className="mt-3 h-1 rounded-full overflow-hidden bg-white/5">
-              <div className="h-full w-2/5" style={{ background: "linear-gradient(90deg, #00f5a0, #00d9f5)" }} />
-            </div>
-          </div>
-          <div className="jmb-glass rounded-2xl p-4">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jmb-text-mute)]">Outflow</p>
-            <p className="mt-1 text-lg font-bold text-white">₦0</p>
-            <div className="mt-3 h-1 rounded-full overflow-hidden bg-white/5">
-              <div className="h-full w-1/4" style={{ background: "linear-gradient(90deg, #ff5cb0, #8a5cff)" }} />
-            </div>
-          </div>
+          <Insight
+            label="Inflow"
+            value={`₦${(
+              transactions.filter((t) => String(t.type).toUpperCase() === "CREDIT")
+                .reduce((acc, t) => acc + (Number(t.amount) || 0), 0) / 100
+            ).toLocaleString()}`}
+            gradient="linear-gradient(90deg, #00f5a0, #00d9f5)"
+          />
+          <Insight
+            label="Outflow"
+            value={`₦${(
+              transactions.filter((t) => String(t.type).toUpperCase() === "DEBIT")
+                .reduce((acc, t) => acc + (Number(t.amount) || 0), 0) / 100
+            ).toLocaleString()}`}
+            gradient="linear-gradient(90deg, #ff5cb0, #8a5cff)"
+          />
         </section>
 
         {/* Recent transactions */}
@@ -208,17 +257,17 @@ export default async function HomePage() {
               </div>
             ) : (
               transactions.slice(0, 5).map((tx: Record<string, unknown>, i: number) => {
-                const isCredit = tx.type === "CREDIT";
+                const isCredit = String(tx.type || "").toUpperCase() === "CREDIT";
                 return (
-                  <div key={i} className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-3">
+                  <Link key={String(tx.id || i)} href={`/transactions/${tx.id || ""}`} className="flex items-center justify-between p-4 hover:bg-white/[0.04] transition">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${isCredit ? "bg-[rgba(44,214,160,0.12)] text-[var(--jmb-green)]" : "bg-[rgba(255,92,122,0.12)] text-[var(--jmb-red)]"}`}>
                         <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                           {isCredit ? <><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></> : <><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></>}
                         </svg>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-white">{String(tx.narration || "Transaction")}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-white truncate">{String(tx.narration || "Transaction")}</p>
                         <p className="text-[11px] text-[var(--jmb-text-mute)]">
                           {tx.createdAt ? new Date(String(tx.createdAt)).toLocaleDateString() : ""}
                         </p>
@@ -227,7 +276,7 @@ export default async function HomePage() {
                     <span className={`text-sm font-semibold ${isCredit ? "text-[var(--jmb-green)]" : "text-white"}`}>
                       {isCredit ? "+" : "-"}₦{((Number(tx.amount) || 0) / 100).toLocaleString()}
                     </span>
-                  </div>
+                  </Link>
                 );
               })
             )}
@@ -236,6 +285,18 @@ export default async function HomePage() {
       </div>
 
       <BottomNav />
+    </div>
+  );
+}
+
+function Insight({ label, value, gradient }: { label: string; value: string; gradient: string }) {
+  return (
+    <div className="jmb-glass rounded-2xl p-4">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--jmb-text-mute)]">{label}</p>
+      <p className="mt-1 text-lg font-bold text-white">{value}</p>
+      <div className="mt-3 h-1 rounded-full overflow-hidden bg-white/5">
+        <div className="h-full w-2/5" style={{ background: gradient }} />
+      </div>
     </div>
   );
 }

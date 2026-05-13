@@ -1,11 +1,41 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
+import {
+  getCustomer,
+  getCustomerDocuments,
+  unwrap,
+  unwrapList,
+  extractError,
+} from "@/lib/fusecore";
 import { BackBtn, Wordmark } from "@/components/Brand";
 import BottomNav from "@/components/BottomNav";
+import DataError from "@/components/DataError";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function ProfilePage() {
   const session = await getSession();
   if (!session) redirect("/onboarding");
+
+  let customer: any = null;
+  let documents: any[] = [];
+  let fetchError: string | null = null;
+
+  if (session.customerId) {
+    try {
+      customer = unwrap<any>(await getCustomer(session.customerId));
+    } catch (err) {
+      fetchError = extractError(err);
+    }
+    try {
+      const raw = await getCustomerDocuments(session.customerId);
+      const { items } = unwrapList<any>(raw);
+      documents = items;
+    } catch {
+      /* documents are optional */
+    }
+  }
 
   const tierLabels = ["Unverified", "Basic KYC", "Full KYC"];
   const tierTone = ["var(--jmb-red)", "var(--jmb-amber)", "var(--jmb-mint)"];
@@ -55,6 +85,8 @@ export default async function ProfilePage() {
           <div className="w-10" />
         </header>
 
+        <DataError message={fetchError} />
+
         {/* Profile hero */}
         <section className="relative">
           <div className="absolute -inset-1 rounded-[28px] blur-2xl opacity-50 jmb-pulse" style={{ background: "var(--jmb-grad-card)" }} />
@@ -66,7 +98,7 @@ export default async function ProfilePage() {
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl font-bold text-white truncate">{session.name || "JMB User"}</h1>
-                <p className="text-sm text-[var(--jmb-text-dim)]">{session.phone}</p>
+                <p className="text-sm text-[var(--jmb-text-dim)]">{customer?.email || session.phone}</p>
                 <span className="jmb-chip mt-2" style={{ color: tierTone[tierIdx] }}>
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: tierTone[tierIdx] }} />
                   {tierLabels[tierIdx]}
@@ -80,9 +112,41 @@ export default async function ProfilePage() {
         <section className="mt-5">
           <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jmb-text-mute)] mb-2 px-1">Account</p>
           <div className="jmb-glass rounded-2xl divide-y divide-white/5 overflow-hidden">
-            <Row label="Customer ID" value={session.customerId ? `${session.customerId.slice(0, 12)}…` : "—"} />
-            <Row label="Account ID" value={session.accountId ? `${session.accountId.slice(0, 12)}…` : "—"} />
+            <Row label="Phone" value={String(customer?.phone || session.phone || "—")} />
+            <Row label="Email" value={String(customer?.email || "—")} />
+            <Row label="Customer ID" value={session.customerId ? `${session.customerId.slice(0, 12)}…` : "—"} mono />
+            <Row label="Account ID" value={session.accountId ? `${session.accountId.slice(0, 12)}…` : "—"} mono />
             <Row label="Tier" value={tierLabels[tierIdx]} />
+          </div>
+        </section>
+
+        {/* Documents */}
+        <section className="mt-5">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--jmb-text-mute)]">Documents</p>
+            <span className="text-[11px] text-[var(--jmb-text-mute)]">{documents.length} on file</span>
+          </div>
+          <div className="jmb-glass rounded-2xl divide-y divide-white/5 overflow-hidden">
+            {documents.length === 0 ? (
+              <div className="p-5 text-center text-xs text-[var(--jmb-text-mute)]">No documents uploaded yet.</div>
+            ) : (
+              documents.slice(0, 6).map((d: any, i: number) => (
+                <div key={i} className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-9 h-9 rounded-xl jmb-glass-hi flex items-center justify-center text-[var(--jmb-text-dim)]">
+                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>
+                      </svg>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{String(d.type || "Document")}</p>
+                      <p className="text-[11px] text-[var(--jmb-text-mute)] truncate">{String(d.filename || d.url || "")}</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider text-[var(--jmb-text-mute)]">{String(d.status || "")}</span>
+                </div>
+              ))
+            )}
           </div>
         </section>
 
@@ -129,11 +193,11 @@ export default async function ProfilePage() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex justify-between items-center p-4">
       <span className="text-sm text-[var(--jmb-text-dim)]">{label}</span>
-      <span className="text-sm font-medium text-white truncate ml-3">{value}</span>
+      <span className={`text-sm font-medium text-white truncate ml-3 ${mono ? "font-mono text-xs" : ""}`}>{value}</span>
     </div>
   );
 }
